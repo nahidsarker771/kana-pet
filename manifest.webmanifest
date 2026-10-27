@@ -1,7 +1,7 @@
 {
   "name": "KanaPet — Learn Japanese Kana",
   "short_name": "KanaPet",
-  "description": "Learn hiragana and katakana with Mochi the pet, a built-in offline voice pack, N5 reading words and 10-minute word reminders.",
+  "description": "Learn hiragana and katakana with Mochi the pet, offline voice actors, cute pet sounds, N5 reading words and 10-minute word reminders.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

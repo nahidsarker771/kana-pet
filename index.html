@@ -218,7 +218,35 @@
         <div class="toggle-row"><div><span class="t-label" data-i18n="showRomajiLetters">Show romaji (English letters)</span><span class="t-sub" data-i18n="offPracticeHint">Off = practice without seeing readings</span></div><label class="switch"><input type="checkbox" id="set-showromaji" checked><span class="slider"></span></label></div>
         <div class="toggle-row"><div><span class="t-label" data-i18n="autoAdvance">Auto-advance cards</span><span class="t-sub" data-i18n="autoAdvanceHint">Off = answer stays until you tap Next</span></div><label class="switch"><input type="checkbox" id="set-autoadvance" checked><span class="slider"></span></label></div>
         <div class="toggle-row"><div><span class="t-label" data-i18n="soundEffects">Sound effects</span><span class="t-sub" data-i18n="correctWrongChimes">Correct / wrong chimes</span></div><label class="switch"><input type="checkbox" id="set-sound"><span class="slider"></span></label></div>
+        <div class="toggle-row"><div><span class="t-label" data-i18n="petSounds">Pet sounds</span><span class="t-sub" data-i18n="petSoundsHint">Cute mews and chirps when you touch your pet</span></div><label class="switch"><input type="checkbox" id="set-petsounds"><span class="slider"></span></label></div>
         <div class="toggle-row"><div><span class="t-label" data-i18n="hapticFeedback">Haptic feedback</span><span class="t-sub" data-i18n="vibrateOnAnswer">Vibrate on answer</span></div><label class="switch"><input type="checkbox" id="set-haptic"><span class="slider"></span></label></div>
+      </div>
+
+      <div class="setting-group" id="voice-group">
+        <h3 data-i18n="voiceActor">Voice actor</h3>
+        <p class="setting-note" data-i18n="voiceActorHint">Tap a voice to hear a sample. Every voice works offline.</p>
+        <div class="voice-grid" id="voice-grid">
+          <button type="button" class="voice-card" data-voice="momo" aria-pressed="false">
+            <span class="voice-avatar" aria-hidden="true">M</span>
+            <span class="voice-info"><span class="voice-name">Momo</span><span class="voice-desc" data-i18n="voiceOriginal">Original female</span></span>
+            <svg class="voice-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 9v6h4l5 4V5L9 9H5z"/><path d="M17 8a5 5 0 0 1 0 8"/></svg>
+          </button>
+          <button type="button" class="voice-card" data-voice="nanami" aria-pressed="false">
+            <span class="voice-avatar" aria-hidden="true">N</span>
+            <span class="voice-info"><span class="voice-name">Nanami</span><span class="voice-desc" data-i18n="voiceNatural">Natural female</span></span>
+            <svg class="voice-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 9v6h4l5 4V5L9 9H5z"/><path d="M17 8a5 5 0 0 1 0 8"/></svg>
+          </button>
+          <button type="button" class="voice-card" data-voice="yuki" aria-pressed="false">
+            <span class="voice-avatar" aria-hidden="true">Y</span>
+            <span class="voice-info"><span class="voice-name">Yuki</span><span class="voice-desc" data-i18n="voiceBright">Bright female</span></span>
+            <svg class="voice-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 9v6h4l5 4V5L9 9H5z"/><path d="M17 8a5 5 0 0 1 0 8"/></svg>
+          </button>
+          <button type="button" class="voice-card" data-voice="keita" aria-pressed="false">
+            <span class="voice-avatar" aria-hidden="true">K</span>
+            <span class="voice-info"><span class="voice-name">Keita</span><span class="voice-desc" data-i18n="voiceMale">Natural male</span></span>
+            <svg class="voice-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 9v6h4l5 4V5L9 9H5z"/><path d="M17 8a5 5 0 0 1 0 8"/></svg>
+          </button>
+        </div>
       </div>
 
       <div class="setting-group" id="reminders-group">
@@ -246,7 +274,7 @@
         <h3 data-i18n="dangerZone">Danger zone</h3>
         <button class="btn btn-warn" id="reset-btn" style="width:100%" data-i18n="resetAllProgress">Reset all progress</button>
       </div>
-      <p style="text-align:center;color:var(--muted);font-size:12px" data-i18n="kanaPetVersion">KanaPet v1.22 · built-in voice · 10-min words · works offline</p>
+      <p style="text-align:center;color:var(--muted);font-size:12px" data-i18n="kanaPetVersion">KanaPet v1.23 · 4 voices · pet sounds · 10-min words · works offline</p>
     </div>
   </div>
 

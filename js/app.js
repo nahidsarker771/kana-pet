@@ -27,7 +27,8 @@
       settings: {
         userName: 'Learner', petName: 'Mochi', dailyGoal: 20, sessionSize: 20,
         sets: { hiraganaBasic: true, katakanaBasic: false, hiraganaDakuten: false, katakanaDakuten: false, hiraganaHandakuten: false, katakanaHandakuten: false, yoon: false, n5: false, n4: false, n5read: false },
-        romajiHint: 'on', showRomaji: true, autoAdvance: true, autoplayAudio: true, soundOn: true, hapticOn: true
+        romajiHint: 'on', showRomaji: true, autoAdvance: true, autoplayAudio: true, soundOn: true, hapticOn: true,
+        voiceActor: 'nanami', petSounds: true
       },
       stats: { xp: 0, level: 1, streak: 0, lastSessionDate: '', totalSessions: 0, totalCorrect: 0, totalAnswered: 0,
                learned: {}, correctStreak: {}, activity: {} },
@@ -78,17 +79,32 @@
   }
   function vibrate(p) { if (state.settings.hapticOn && navigator.vibrate) { try { navigator.vibrate(p); } catch (e) {} } }
   // --- Pronunciation ------------------------------------------------------
-  // Primary: a built-in OFFLINE voice pack (www/audio/<hash>.mp3), one clip per
-  // kana / word, generated at build time by tools/gen_voicepack.js. Fallback:
-  // the device's own Japanese text-to-speech if a clip is missing or unplayable.
-  // No microphone / speech recognition anywhere.
+  // Primary: built-in OFFLINE voice packs. One clip per kana / word lives in
+  // www/audio/<hash>.mp3 (Momo) or www/audio/<pack>/<hash>.mp3 (other actors).
+  // Clips are generated at build time (tools/gen_voicepack.js for Momo,
+  // tools/gen_edge_voicepack.py for Edge voices). Fallback: Momo's clip, then
+  // the device's own Japanese text-to-speech. No microphone / speech
+  // recognition anywhere.
   //
-  // stable string hash — MUST match tools/gen_voicepack.js hashKey()
+  // stable string hash — MUST match both voice-pack generators.
   function hashKey(s) {
     var h = 2166136261 >>> 0;
     for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
     h = (h ^ Math.imul(s.length, 2654435761)) >>> 0;
     return h.toString(16);
+  }
+  var VOICE_PACKS = {
+    momo:   { name: 'Momo',   dir: '' },
+    nanami: { name: 'Nanami', dir: 'nanami/' },
+    yuki:   { name: 'Yuki',   dir: 'yuki/' },
+    keita:  { name: 'Keita',  dir: 'keita/' }
+  };
+  function currentVoice() {
+    return VOICE_PACKS[state.settings.voiceActor] ? state.settings.voiceActor : 'momo';
+  }
+  function clipSrc(text, actor) {
+    var id = VOICE_PACKS[actor] ? actor : 'momo';
+    return 'audio/' + VOICE_PACKS[id].dir + hashKey(text) + '.mp3';
   }
   var voiceFailed = {}; // src -> true once we know the clip is missing/broken
   var voiceAudio = null; // keep a reference so playback isn't garbage-collected
@@ -109,7 +125,7 @@
   }
   function preloadKana(text) {
     if (!text) return;
-    var src = 'audio/' + hashKey(text) + '.mp3';
+    var src = clipSrc(text, currentVoice());
     if (!voiceFailed[src] && !voiceCache[src]) getClip(src);
   }
 
@@ -123,27 +139,33 @@
     } catch (e) {}
   }
 
-  function speakKana(text) {
+  function speakKana(text, actorOverride) {
     if (!text) return;
-    var src = 'audio/' + hashKey(text) + '.mp3';
-    if (voiceFailed[src]) { ttsFallback(text); return; }
+    var actor = VOICE_PACKS[actorOverride] ? actorOverride : currentVoice();
+    var src = clipSrc(text, actor);
+    function fallback() {
+      if (actor !== 'momo') { speakKana(text, 'momo'); return; }
+      ttsFallback(text);
+    }
+    if (voiceFailed[src]) { fallback(); return; }
     try {
       var a = getClip(src);
       a.__text = text;
-      a.onerror = function () { voiceFailed[src] = true; ttsFallback(a.__text || text); };
+      a.onerror = function () { voiceFailed[src] = true; fallback(); };
       voiceAudio = a;
       try { a.currentTime = 0; } catch (e) {}
       var p = a.play();
       if (p && p.catch) p.catch(function (err) {
         // Autoplay-blocked before any user gesture is NOT a broken clip.
         if (err && err.name === 'NotAllowedError') return;
-        voiceFailed[src] = true; ttsFallback(text);
+        voiceFailed[src] = true; fallback();
       });
-    } catch (e) { ttsFallback(text); }
+    } catch (e) { fallback(); }
   }
   window.speakKana = speakKana; // shared with charts.js / other modules
   window.pronounce = speakKana;
   window.preloadKana = preloadKana;
+  window.VOICE_PACKS = VOICE_PACKS;
 
   // On the web build only (not inside the Capacitor APK), add a link so
   // anyone can grab the standalone offline Android app.
@@ -721,6 +743,14 @@
   }
 
   /* ---------------- Profile / settings ---------------- */
+  function renderVoiceGrid() {
+    var active = currentVoice();
+    $$('[data-voice]').forEach(function (card) {
+      var on = card.dataset.voice === active;
+      card.classList.toggle('active', on);
+      card.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
   function renderProfile() {
     $('#set-username').value = state.settings.userName;
     $('#set-petname').value = state.settings.petName;
@@ -734,7 +764,9 @@
     $('#set-showromaji').checked = state.settings.showRomaji;
     $('#set-autoadvance').checked = state.settings.autoAdvance;
     $('#set-sound').checked = state.settings.soundOn;
+    $('#set-petsounds').checked = state.settings.petSounds;
     $('#set-haptic').checked = state.settings.hapticOn;
+    renderVoiceGrid();
     ['hiraganaBasic', 'katakanaBasic', 'hiraganaDakuten', 'katakanaDakuten', 'hiraganaHandakuten', 'katakanaHandakuten', 'yoon', 'n5', 'n4', 'n5read'].forEach(function (k) {
       var c = $('[data-set="' + k + '"]');
       if (c) c.classList.toggle('on', !!state.settings.sets[k]);
@@ -761,7 +793,22 @@
     });
     $('#set-autoadvance').addEventListener('change', function (e) { state.settings.autoAdvance = e.target.checked; save(); toast(e.target.checked ? tr('autoAdvanceOn') : tr('autoAdvanceOff')); });
     $('#set-sound').addEventListener('change', function (e) { state.settings.soundOn = e.target.checked; save(); });
+    $('#set-petsounds').addEventListener('change', function (e) {
+      state.settings.petSounds = e.target.checked; save();
+      if (window.Pet) Pet.setSoundEnabled(state.settings.petSounds);
+      if (state.settings.petSounds && window.Pet) Pet.sound('chirp');
+    });
     $('#set-haptic').addEventListener('change', function (e) { state.settings.hapticOn = e.target.checked; save(); });
+    $$('[data-voice]').forEach(function (card) {
+      card.addEventListener('click', function () {
+        var id = card.dataset.voice;
+        if (!VOICE_PACKS[id]) return;
+        state.settings.voiceActor = id; save();
+        renderVoiceGrid();
+        speakKana('わたし', id);
+        toast(tr('voiceChanged', { name: VOICE_PACKS[id].name }));
+      });
+    });
     $$('[data-set]').forEach(function (chip) {
       chip.addEventListener('click', function () {
         var k = chip.dataset.set;
@@ -817,7 +864,7 @@
       localStorage.removeItem(STORAGE_KEY);
       state = load();
       $('#reset-modal').classList.remove('show');
-      if (window.Pet) Pet.setLevel(1);
+      if (window.Pet) { Pet.setLevel(1); Pet.setSoundEnabled(state.settings.petSounds); }
       updateXPBar(); updateBadge(); renderProfile(); renderProgress(); renderReview(); renderStartPanel();
       toast(tr('progressReset'));
     });
@@ -892,7 +939,7 @@
     updateBadge();
     renderStartPanel();
     renderControls();
-    if (window.Pet) Pet.init();
+    if (window.Pet) { Pet.init(); Pet.setSoundEnabled(state.settings.petSounds); }
     switchTab('learn');
     window.addEventListener('languageChanged', function () {
       renderStartPanel();

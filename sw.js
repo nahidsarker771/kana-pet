@@ -1,6 +1,6 @@
 /* KanaPet service worker — offline web app + notification display. */
 'use strict';
-var CACHE = 'kanapet-v1.22';
+var CACHE = 'kanapet-v1.23';
 var CORE = [
   './', 'index.html', 'manifest.webmanifest',
   'css/fonts.css', 'css/style.css', 'css/charts.css',
@@ -31,7 +31,7 @@ self.addEventListener('fetch', function (e) {
   var url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   // Audio clips never change: cache them on first play.
-  if (/\/audio\/[^/]+\.mp3$/.test(url.pathname)) {
+  if (/\/audio\/.*\.mp3$/.test(url.pathname)) {
     e.respondWith(caches.match(req).then(function (hit) {
       if (hit) return hit;
       return fetch(req).then(function (res) {
