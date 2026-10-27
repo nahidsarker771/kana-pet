@@ -1,42 +1,34 @@
 KanaPet — Web Deploy Info
 =========================
-Recorded: 2026-10-27 (after v1.22 local sync)
+Recorded: 2026-10-27 (v1.23 pushed; docs follow-up commit)
 
 WHAT IS LIVE / DEPLOYED
 -----------------------
-This folder (~/Downloads/kana/web-deploy) is the deployed GitHub Pages repo,
-but the v1.22 files are currently LOCAL/UNCOMMITTED. The live site is still
-the last pushed version.
+This folder (~/Downloads/kana/web-deploy) is the deployed GitHub Pages repo.
 
-  Live URL   : https://nahid77777771-maker.github.io/kana-pet/
-  Live version: KanaPet v1.19 (last pushed)
-  Local files : KanaPet v1.22 (synced 2026-10-27, not committed/pushed)
-  Latest public APK release: v1.19
-  Local APK  : project files/apk/KanaPet-v1.22.apk (not released)
-  Download URL (when release exists):
-    https://github.com/nahid77777771-maker/kana-pet/releases/latest/download/KanaPet.apk
-
-WHY NOT PUSHED
---------------
-Nahid explicitly said he will test first, then push. Do not commit or push
-web-deploy until he confirms v1.22 works on Android.
+  Live URL    : https://nahid77777771-maker.github.io/kana-pet/
+  Live version: KanaPet v1.23 (verified 2026-10-27)
+  Code commit : 952cab3  "v1.23: 4 offline voice actors + pet emotion sounds"
+  APK release : v1.23  (asset KanaPet.apk, 49,939,959 bytes)
+  Local APK   : project files/apk/KanaPet-v1.23.apk
+  Next build  : v1.24 (source VERSION)
+  Download URL: https://github.com/nahid77777771-maker/kana-pet/releases/latest/download/KanaPet.apk
 
 GIT DETAILS
 -----------
   Remote (origin): https://github.com/nahid77777771-maker/kana-pet.git
   Branch         : main
-  Status         : working tree DIRTY (v1.22 changes + untracked new assets)
-  Last commit    : 49ef6d1  "v1.19: built-in offline voice pack (1003 clips),
-                    web Download-APK link, skip-btn fix, docs"
   Deploy method  : GitHub Pages (.nojekyll present)
+  Previous code  : abafd6c  v1.22
+  Current code   : 952cab3  v1.23 (docs follow-up commit after this one)
 
 FILES
 -----
   index.html        <- web landing/version wrapper (== www/web-version.html)
   app-shell.html    <- app shell (== www/index.html)
-  css/ js/          <- identical to source
+  css/ js/          <- identical to source www/
   fonts/ icons/     <- local fonts/icons for offline PWA
-  audio/            <- 1003 offline voice clips
+  audio/            <- Momo root clips + nanami/ yuki/ keita/ (4 × 1003)
   manifest.webmanifest + sw.js
   .nojekyll         <- disables Jekyll processing (GitHub Pages)
 
@@ -47,28 +39,26 @@ RELATION TO SOURCE
   Two HTML wrappers are renamed:
      index.html     == www/web-version.html
      app-shell.html == www/index.html
-  Current source VERSION : 1.23 (next build)
-  Current APK            : v1.22 local
-  Current web files      : v1.22 local (unpushed)
+  Source VERSION : 1.24 (next build)
+  Current APK    : v1.23
+  Current web    : v1.23 (pushed)
 
-V1.22 LOCAL CHANGES
+V1.23 CHANGES
+-------------
+  - Four selectable offline voice actors: Momo (original female), Nanami
+    (natural female), Yuki (bright Nanami variant), Keita (natural male).
+    1003 clips each; default Nanami; Profile cards select/preview.
+  - Cute WebAudio pet emotion sounds (mew/chirp/purr/happy/sad/celebrate)
+    with Profile "Pet sounds" toggle.
+  - PWA cache bumped to kanapet-v1.23; audio subdirectory regex now caches
+    nanami/yuki/keita clips on first play.
+  - APK grew to ~48 MB (4 × 1003 audio clips bundled).
+  - Bangla + English labels for voice actor / pet sounds.
+
+TO DEPLOY NEXT TIME
 -------------------
-  - 10-minute word reminders: native Android alarm chain + Profile history,
-    test send, exact-alarm shortcut; web timer/SW while page is open.
-  - Notification order: kana -> English -> Bangla; Bangla labels when app is
-    in Bangla.
-  - Full dynamic Bangla UI incl. language selector, pet speech, charts,
-    history/review strings, accessibility labels.
-  - 817 curated Bangla meanings.
-  - PWA cache now includes all 8 local fonts (26 core files).
-  - Session count fixed; onboarding `<br>` fixed; SW notify fallback fixed.
-  - Footer/version/APK: v1.22.
-
-TO DEPLOY LATER
----------------
 ```bash
 cd ~/Downloads/kana
-# re-sync if source changed:
 cp "project files/kanapet/www/web-version.html" web-deploy/index.html
 cp "project files/kanapet/www/index.html"        web-deploy/app-shell.html
 cp "project files/kanapet/www/manifest.webmanifest" "project files/kanapet/www/sw.js" web-deploy/
@@ -79,8 +69,8 @@ rsync -a --delete "project files/kanapet/www/icons/" web-deploy/icons/
 rsync -a --delete "project files/kanapet/www/audio/" web-deploy/audio/
 cd web-deploy
 git add -A
-git commit -m "v1.22: 10-minute reminders + full Bangla UI + PWA offline fonts"
+git commit -m "v<ver>: ..."
 git push origin main
 ```
-Then create release v1.22 and upload the APK as asset `KanaPet.apk` so the web
-Download button resolves to the new version.
+Then create a GitHub release and upload the APK as asset `KanaPet.apk` so the
+web Download button resolves to the new version.
