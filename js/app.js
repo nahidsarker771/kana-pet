@@ -4,6 +4,22 @@
   var STORAGE_KEY = 'kanapet_v1';
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  function tr(key, vars) {
+    var s = window.I18n ? window.I18n.t(key) : key;
+    if (vars) Object.keys(vars).forEach(function (k) { s = s.split('{' + k + '}').join(vars[k]); });
+    return s;
+  }
+  function typeLabel(type) { return tr(type); }
+  function groupLabel(group, type) {
+    if (group === 'basic') return tr(type);
+    if (group === 'dakuten') return tr(type === 'katakana' ? 'katakanaDakuten' : 'hiraganaDakuten');
+    if (group === 'handakuten') return tr(type === 'katakana' ? 'katakanaMaru' : 'hiraganaMaru');
+    if (group === 'yoon') return tr('yoon');
+    if (group === 'n5') return tr('n5Vocab');
+    if (group === 'n4') return tr('n4Vocab');
+    if (group === 'n5read') return tr('n5Reading');
+    return tr(type) || group || '';
+  }
 
   /* ---------------- State & storage ---------------- */
   function defaultState() {
@@ -76,6 +92,26 @@
   }
   var voiceFailed = {}; // src -> true once we know the clip is missing/broken
   var voiceAudio = null; // keep a reference so playback isn't garbage-collected
+  var voiceCache = {}, voiceOrder = [], VOICE_CACHE_MAX = 28;
+  function getClip(src) {
+    var a = voiceCache[src];
+    if (a) return a;
+    a = new Audio(src);
+    a.preload = 'auto';
+    voiceCache[src] = a;
+    voiceOrder.push(src);
+    if (voiceOrder.length > VOICE_CACHE_MAX) {
+      var old = voiceOrder.shift();
+      try { voiceCache[old].pause(); } catch (e) {}
+      delete voiceCache[old];
+    }
+    return a;
+  }
+  function preloadKana(text) {
+    if (!text) return;
+    var src = 'audio/' + hashKey(text) + '.mp3';
+    if (!voiceFailed[src] && !voiceCache[src]) getClip(src);
+  }
 
   function ttsFallback(text) {
     try {
@@ -92,10 +128,11 @@
     var src = 'audio/' + hashKey(text) + '.mp3';
     if (voiceFailed[src]) { ttsFallback(text); return; }
     try {
-      var a = new Audio(src);
-      a.preload = 'auto';
+      var a = getClip(src);
+      a.__text = text;
+      a.onerror = function () { voiceFailed[src] = true; ttsFallback(a.__text || text); };
       voiceAudio = a;
-      a.onerror = function () { voiceFailed[src] = true; ttsFallback(text); };
+      try { a.currentTime = 0; } catch (e) {}
       var p = a.play();
       if (p && p.catch) p.catch(function (err) {
         // Autoplay-blocked before any user gesture is NOT a broken clip.
@@ -106,6 +143,7 @@
   }
   window.speakKana = speakKana; // shared with charts.js / other modules
   window.pronounce = speakKana;
+  window.preloadKana = preloadKana;
 
   // On the web build only (not inside the Capacitor APK), add a link so
   // anyone can grab the standalone offline Android app.
@@ -116,7 +154,8 @@
       link.href = 'https://github.com/nahid77777771-maker/kana-pet/releases/latest/download/KanaPet.apk';
       link.target = '_blank'; link.rel = 'noopener';
       link.style.cssText = 'display:inline-block;margin:10px auto;padding:9px 18px;border:1.5px solid currentColor;border-radius:10px;color:var(--accent,#4a90d9);text-decoration:none;font-size:13px;font-weight:600';
-      link.textContent = 'Download Android app (APK) - works offline';
+      link.setAttribute('data-i18n', 'downloadApk');
+      link.textContent = tr('downloadApk');
       var v = document.querySelector('[data-i18n="kanaPetVersion"]');
       if (v && v.parentNode) v.parentNode.insertBefore(link, v.nextSibling);
     } catch (e) {}
@@ -153,7 +192,7 @@
     var n = Math.min(state.settings.sessionSize, pool.length);
     var deck = shuffle(pool.slice()).slice(0, n);
     if (deck.length === 0) { toast(window.I18n ? window.I18n.t('noSetsSelected') : 'No characters selected — pick sets in Profile.'); return; }
-    session = { deck: deck, correct: 0, total: 0, fromReview: !!fromReview, phase: 'idle', timers: [] };
+    session = { deck: deck, size: deck.length, correct: 0, total: 0, fromReview: !!fromReview, phase: 'idle', timers: [] };
     $('#start-panel').classList.add('hidden');
     $('#summary-panel').classList.add('hidden');
     $('#deck-area').classList.remove('hidden');
@@ -163,8 +202,16 @@
   }
   function clearSessionTimers() { if (session) session.timers.forEach(function (t) { clearTimeout(t); }); if (session) session.timers = []; }
 
+  function meaningBn(meaning) {
+    if (!meaning) return '';
+    if (window.MEANINGS_WORD_BN && window.MEANINGS_WORD_BN[meaning]) return window.MEANINGS_WORD_BN[meaning];
+    if (window.MEANINGS_BN && window.MEANINGS_BN[meaning]) return window.MEANINGS_BN[meaning];
+    return '';
+  }
+
   function fillCard(el, entry, depth) {
     if (!entry) { el.style.display = 'none'; return; }
+    preloadKana(entry.kana);
     // full state reset — kills stale transform/opacity/transition that cause overlap
     el.style.display = '';
     el.style.transition = 'none';
@@ -177,11 +224,8 @@
     var showHint = state.settings.showRomaji && !isReading && (hintMode === 'on' || (hintMode === 'auto' && cs < 3));
     var hideRom = !state.settings.showRomaji;
     var romStyle = hideRom ? ' style="display:none"' : '';
-    var groupLabel = entry.group === 'basic' ? (entry.type === 'hiragana' ? (window.I18n?window.I18n.t('hiragana'):'Hiragana') : (window.I18n?window.I18n.t('katakana'):'Katakana')) :
-      entry.group === 'dakuten' ? (window.I18n ? window.I18n.t('hiraganaDakuten') : 'Dakuten (ten-ten)') : entry.group === 'handakuten' ? (window.I18n ? window.I18n.t('hiraganaMaru') : 'Handakuten (maru)') :
-      entry.group === 'n5' ? (window.I18n?window.I18n.t('n5Vocab'):'JLPT N5 vocab') : entry.group === 'n4' ? (window.I18n?window.I18n.t('n4Vocab'):'JLPT N4 vocab') :
-      entry.group === 'n5read' ? (window.I18n?window.I18n.t('n5Reading'):'N5 reading (kana)') : (window.I18n ? (window.I18n.getLang()==='bn' ? window.I18n.t('yoon') : 'Yōon') : 'Yōon');
-    var typeLabel = entry.type === 'vocab' ? (window.I18n ? window.I18n.t('vocab') : 'Vocab') : entry.type === 'reading' ? (window.I18n ? window.I18n.t('reading') : 'Reading') : entry.type;
+    var groupName = groupLabel(entry.group, entry.type);
+    var typeName = typeLabel(entry.type);
     var fitFront = fitKana(el, entry.kana, 120);
     var fitBack = fitKana(el, entry.kana, 78);
     var fitRom = fitRomaji(el, entry.romaji, 28);
@@ -189,21 +233,21 @@
     el.innerHTML =
       '<div class="card-flip">' +
         '<div class="face front">' +
-          '<span class="type-tag">' + typeLabel + '</span>' +
-          '<span class="group-tag">' + groupLabel + '</span>' +
-          '<p class="kana-big jp kana-sound" data-speak="' + entry.kana + '" role="button" tabindex="0" aria-label="Hear this letter" style="font-size:' + fitFront + 'px">' + entry.kana + '</p>' +
+          '<span class="type-tag">' + typeName + '</span>' +
+          '<span class="group-tag">' + groupName + '</span>' +
+          '<p class="kana-big jp kana-sound" data-speak="' + entry.kana + '" role="button" tabindex="0" aria-label="' + tr('ariaHearLetter') + '" style="font-size:' + fitFront + 'px">' + entry.kana + '</p>' +
           '<p class="romaji-hint" style="font-size:' + fitHint + 'px">' + (showHint ? entry.romaji : '&nbsp;') + '</p>' +
-          '<span class="tap-hint">Tap card to reveal · swipe to skip</span>' +
-          '<button class="speaker-btn" data-speak="' + entry.kana + '" aria-label="Play audio">' + speakerIcon() + '</button>' +
+          '<span class="tap-hint">' + tr('tapCardHint') + '</span>' +
+          '<button class="speaker-btn" data-speak="' + entry.kana + '" aria-label="' + tr('ariaPlayAudio') + '">' + speakerIcon() + '</button>' +
         '</div>' +
         '<div class="face back">' +
-          '<span class="type-tag">' + entry.type + '</span>' +
-          '<p class="kana-big jp kana-sound" data-speak="' + entry.kana + '" role="button" tabindex="0" aria-label="Hear this letter" style="font-size:' + fitBack + 'px">' + entry.kana + '</p>' +
+          '<span class="type-tag">' + typeName + '</span>' +
+          '<p class="kana-big jp kana-sound" data-speak="' + entry.kana + '" role="button" tabindex="0" aria-label="' + tr('ariaHearLetter') + '" style="font-size:' + fitBack + 'px">' + entry.kana + '</p>' +
           '<p class="romaji" style="font-size:' + fitRom + 'px"' + romStyle + '>' + entry.romaji + '</p>' +
           (isReading ? '' : '<p class="ex-word jp">' + entry.example.word + '</p>') +
           (isReading ? '' : '<p class="ex-romaji" style="font-size:' + Math.min(fitRom, 14) + 'px"' + romStyle + '>' + entry.example.romaji + '</p>') +
-          '<p class="ex-meaning">"' + (window.MEANINGS_BN && window.I18n && window.I18n.getLang()==='bn' && window.MEANINGS_BN[entry.example.meaning] ? window.MEANINGS_BN[entry.example.meaning] : (window.MEANINGS_BN && window.I18n && window.I18n.getLang()==='bn' ? (entry.example.meaning_bn||entry.example.meaning) : entry.example.meaning)) + '"</p>' +
-          '<button class="speaker-btn" data-speak="' + entry.kana + '" aria-label="Play audio">' + speakerIcon() + '</button>' +
+          '<p class="ex-meaning">"' + (window.I18n && window.I18n.getLang()==='bn' ? (meaningBn(entry.example.meaning) || entry.example.meaning_bn || entry.example.meaning) : entry.example.meaning) + '"</p>' +
+          '<button class="speaker-btn" data-speak="' + entry.kana + '" aria-label="' + tr('ariaPlayAudio') + '">' + speakerIcon() + '</button>' +
         '</div>' +
       '</div>';
     // stacked depth transform
@@ -242,6 +286,7 @@
     fillCard($('#card0'), session.deck[0], 0);
     fillCard($('#card1'), session.deck[1], 1);
     fillCard($('#card2'), session.deck[2], 2);
+    preloadKana(session.deck[1] && session.deck[1].kana);
     // next card springs up from the stack (smooth physics, masks any overlap)
     var c0 = $('#card0');
     c0.classList.add('rise-in');
@@ -252,7 +297,7 @@
 
   function updateSessionProgress() {
     if (!session) return;
-    var done = session.total, total = session.total + session.deck.length;
+    var done = session.total, total = session.size || (session.total + session.deck.length);
     $('#session-count').textContent = done + ' / ' + total;
     $('#session-bar').style.width = (total ? (done / total) * 100 : 0) + '%';
   }
@@ -348,7 +393,9 @@
     state.stats.xp += n;
     state.stats.level = Math.floor(state.stats.xp / 100) + 1;
     if (state.stats.level > before) {
-      toast('Level up! You are now level ' + state.stats.level + '! ' + (state.stats.level >= 3 ? state.settings.petName + ' got a new accessory!' : ''));
+      var msg = tr('levelUp', { level: state.stats.level });
+      if (state.stats.level >= 3) msg += ' ' + tr('gotAccessory', { pet: state.settings.petName });
+      toast(msg);
       if (window.Pet) Pet.setLevel(state.stats.level);
     }
     $('#xp-num').textContent = state.stats.xp;
@@ -392,7 +439,7 @@
       state.stats.lastSessionDate = today;
     }
     save();
-    var msg = mistakes === 0 ? 'Perfect! Flawless session!' : mistakes <= 3 ? 'Great job! Just a few slips!' : 'Keep practicing! ' + state.settings.petName + ' believes in you!';
+    var msg = mistakes === 0 ? tr('perfect') : mistakes <= 3 ? tr('fewSlips') : tr('keepPracticing', { pet: state.settings.petName });
     $('#sum-accuracy').textContent = acc + '%';
     $('#sum-mistakes').textContent = mistakes;
     $('#sum-correct').textContent = session.correct + ' / ' + session.total;
@@ -420,7 +467,7 @@
     $('#start-panel').classList.remove('hidden');
     renderStartPanel();
     if (window.Pet) Pet.happy();
-    toast('Session stopped — pick your sets and start again.');
+    toast(tr('sessionStopped'));
   }
 
   /* ---------------- Swipe physics on top card ---------------- */
@@ -536,13 +583,18 @@
   var toastTimer = null;
   function toast(msg) {
     var t = $('#toast');
+    if (!t) return;
     t.textContent = msg; t.classList.add('show');
     if (toastTimer) clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2600);
   }
+  window.toast = toast;
 
   /* ---------------- Tabs ---------------- */
+  var currentTab = 'learn';
   function switchTab(name) {
+    var previous = currentTab;
+    currentTab = name;
     $$('.tab-page').forEach(function (p) { p.classList.remove('active'); });
     $('#tab-' + name).classList.add('active');
     $$('.tabbar button').forEach(function (b) { b.classList.toggle('active', b.dataset.tab === name); });
@@ -550,6 +602,7 @@
     if (name === 'progress') renderProgress();
     if (name === 'profile') renderProfile();
     if (name === 'learn') { if (!session) { $('#deck-area').classList.add('hidden'); $('#start-panel').classList.remove('hidden'); renderStartPanel(); } }
+    if (window.Pet && previous !== name) Pet.tabChange(name, previous);
   }
 
   function updateBadge() {
@@ -565,7 +618,8 @@
     $('#pool-count').textContent = pool.length;
     $('#session-size-info').textContent = state.settings.sessionSize;
     var today = state.stats.activity[todayStr()] || 0;
-    $('#today-progress').textContent = today + ' / ' + state.settings.dailyGoal + ' today';
+    var todayLabel = (window.I18n && window.I18n.t('today')) || 'today';
+    $('#today-progress').textContent = today + ' / ' + state.settings.dailyGoal + ' ' + todayLabel;
     $('#pet-name-start').textContent = state.settings.petName;
   }
 
@@ -574,18 +628,17 @@
     var list = $('#history-list');
     list.innerHTML = '';
     var h = state.history || [];
-    if (!h.length) { list.innerHTML = '<div class="empty-note">No history yet — answer cards to build your log.</div>'; return; }
+    if (!h.length) { list.innerHTML = '<div class="empty-note">' + tr('noHistoryYet') + '</div>'; return; }
     h.slice(0, 100).forEach(function (r) {
       var d = new Date(r.ts);
       var time = (d.getMonth() + 1) + '/' + d.getDate() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
-      var tag = r.type === 'vocab' ? (r.group === 'n5' ? (window.I18n?window.I18n.t('n5Vocab'):'JLPT N5 vocab') : (window.I18n?window.I18n.t('n4Vocab'):'JLPT N4 vocab')) :
-        r.type === 'reading' ? (window.I18n?window.I18n.t('n5Reading'):'N5 reading') : (window.I18n ? (window.I18n.t(r.type) || r.type) : r.type);
+      var tag = groupLabel(r.group, r.type);
       var row = document.createElement('div');
       row.className = 'error-row';
       row.innerHTML = '<span class="k jp kana-sound" data-speak="' + r.kana + '" role="button" tabindex="0">' + r.kana + '</span>' +
         '<div class="info"><div class="r">' + r.romaji + '</div>' +
         '<div class="sub">' + tag + ' · ' + time + '</div></div>' +
-        '<span class="miss" style="background:' + (r.correct ? 'rgba(22,163,74,.12)' : 'var(--accent2-soft)') + ';color:' + (r.correct ? 'var(--good)' : 'var(--accent2)') + '">' + (r.correct ? 'Got it' : 'Missed') + '</span>';
+        '<span class="miss" style="background:' + (r.correct ? 'rgba(22,163,74,.12)' : 'var(--accent2-soft)') + ';color:' + (r.correct ? 'var(--good)' : 'var(--accent2)') + '">' + (r.correct ? tr('gotIt') : tr('missed')) + '</span>';
       list.appendChild(row);
     });
   }
@@ -604,7 +657,7 @@
     keys.sort(function (a, b) { return state.errors[b].count - state.errors[a].count; });
     list.innerHTML = '';
     if (keys.length === 0) {
-      list.innerHTML = '<div class="empty-note">No missed characters yet. ' + state.settings.petName + ' is proud of you!</div>';
+      list.innerHTML = '<div class="empty-note">' + tr('noMissedYet') + ' ' + state.settings.petName + ' ' + tr('proud') + '</div>';
       $('#practice-missed-btn').disabled = true;
       $('#practice-missed-btn').style.opacity = '0.5';
       return;
@@ -613,12 +666,15 @@
     $('#practice-missed-btn').style.opacity = '';
     keys.forEach(function (k) {
       var er = state.errors[k];
+      var typeName = typeLabel(er.type);
+      var groupName = groupLabel(er.group, er.type);
+      var meta = groupName && groupName !== typeName ? typeName + ' · ' + groupName : typeName;
       var row = document.createElement('div');
       row.className = 'error-row';
       row.innerHTML = '<span class="k jp kana-sound" data-speak="' + er.kana + '" role="button" tabindex="0">' + er.kana + '</span>' +
         '<div class="info"><div class="r">' + er.romaji + '</div>' +
-        '<div class="sub">' + er.type + ' · ' + er.group + ' · ' + er.correctStreak + '/3 correct streak</div></div>' +
-        '<span class="miss">' + er.count + '× missed</span>';
+        '<div class="sub">' + meta + ' · ' + tr('correctStreak', { streak: er.correctStreak }) + '</div></div>' +
+        '<span class="miss">' + tr('missedTimes', { count: er.count }) + '</span>';
       list.appendChild(row);
     });
   }
@@ -659,7 +715,7 @@
       var cell = document.createElement('div');
       var lvl = c === 0 ? '' : c < 5 ? 'l1' : c < 15 ? 'l2' : c < 30 ? 'l3' : 'l4';
       cell.className = 'cell ' + lvl;
-      cell.title = key + ': ' + c + ' cards';
+      cell.title = tr('cardsTitle', { name: key, count: c });
       hm.appendChild(cell);
     }
   }
@@ -685,6 +741,9 @@
     });
   }
   function bindSettings() {
+    $('#set-language').addEventListener('change', function (e) {
+      if (window.I18n) window.I18n.setLang(e.target.value);
+    });
     $('#set-username').addEventListener('change', function (e) { state.settings.userName = e.target.value || 'Learner'; save(); });
     $('#set-petname').addEventListener('change', function (e) {
       state.settings.petName = e.target.value || 'Mochi'; save();
@@ -700,7 +759,7 @@
       renderControls();
       toast(e.target.checked ? (window.I18n?window.I18n.t('romajiShown'):'Romaji shown.') : (window.I18n?window.I18n.t('romajiHidden'):'Romaji hidden — practice by listening!'));
     });
-    $('#set-autoadvance').addEventListener('change', function (e) { state.settings.autoAdvance = e.target.checked; save(); toast(e.target.checked ? 'Auto-advance on.' : 'Auto-advance off — tap Next to continue.'); });
+    $('#set-autoadvance').addEventListener('change', function (e) { state.settings.autoAdvance = e.target.checked; save(); toast(e.target.checked ? tr('autoAdvanceOn') : tr('autoAdvanceOff')); });
     $('#set-sound').addEventListener('change', function (e) { state.settings.soundOn = e.target.checked; save(); });
     $('#set-haptic').addEventListener('change', function (e) { state.settings.hapticOn = e.target.checked; save(); });
     $$('[data-set]').forEach(function (chip) {
@@ -716,7 +775,7 @@
         state.settings.sets[k] = true;
         $('[data-set="' + k + '"]').classList.add('on');
       });
-      save(); toast('All character sets enabled!');
+      save(); toast(tr('allSetsEnabled'));
     });
     $('#view-charts').addEventListener('click', function () {
       var chartsModal = document.getElementById('charts-modal');
@@ -760,7 +819,7 @@
       $('#reset-modal').classList.remove('show');
       if (window.Pet) Pet.setLevel(1);
       updateXPBar(); updateBadge(); renderProfile(); renderProgress(); renderReview(); renderStartPanel();
-      toast('Progress reset. Fresh start!');
+      toast(tr('progressReset'));
     });
   }
 
@@ -770,6 +829,31 @@
     $('.pet-name-tag').textContent = state.settings.petName;
     if (window.Pet) Pet.setLevel(state.stats.level);
   }
+
+  /* ---------------- Practice reminder history words ---------------- */
+  window.KanaPetPracticeWords = function (words) {
+    var seen = {}, pool = [];
+    (words || []).forEach(function (w) {
+      var kana = typeof w === 'string' ? w : (w && w.kana);
+      if (!kana || seen[kana]) return;
+      seen[kana] = true;
+      var found = null;
+      for (var i = 0; i < KANA.ALL.length; i++) {
+        var e = KANA.ALL[i];
+        if (e.kana !== kana) continue;
+        if (e.group === 'n5read') { found = e; break; }
+        if (!found) found = e;
+      }
+      if (found) pool.push(found);
+    });
+    if (!pool.length) {
+      toast(window.I18n ? window.I18n.t('remindersPracticeEmpty') : 'No reminder words to practice yet.');
+      return false;
+    }
+    switchTab('learn');
+    startSession(pool, false);
+    return true;
+  };
 
   /* ---------------- Boot ---------------- */
   function init() {
@@ -810,6 +894,13 @@
     renderControls();
     if (window.Pet) Pet.init();
     switchTab('learn');
+    window.addEventListener('languageChanged', function () {
+      renderStartPanel();
+      renderProfile();
+      renderProgress();
+      renderReview();
+      if (session && session.phase === 'idle') renderDeck();
+    });
 
     // Android back-button guard (Capacitor) — TODO: import @capacitor/app for full handler; web fallback:
     window.addEventListener('beforeunload', function () { clearSessionTimers(); });

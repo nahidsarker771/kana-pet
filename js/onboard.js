@@ -48,7 +48,10 @@
     document.querySelectorAll('[data-i18n]').forEach(function(el) {
       var key = el.getAttribute('data-i18n');
       var txt = window.I18n.t(key);
-      if (txt) el.textContent = txt;
+      if (!txt) return;
+      // A few labels intentionally contain <br> for compact stat captions.
+      if (/<br\s*\/?>/i.test(txt)) el.innerHTML = txt;
+      else el.textContent = txt;
     });
     document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
       var key = el.getAttribute('data-i18n-placeholder');
@@ -59,6 +62,11 @@
       var key = el.getAttribute('data-i18n-title');
       var txt = window.I18n.t(key);
       if (txt) el.setAttribute('title', txt);
+    });
+    document.querySelectorAll('[data-i18n-aria-label]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n-aria-label');
+      var txt = window.I18n.t(key);
+      if (txt) el.setAttribute('aria-label', txt);
     });
     document.title = window.I18n.t('title');
   }

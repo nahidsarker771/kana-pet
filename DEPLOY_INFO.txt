@@ -1,79 +1,86 @@
 KanaPet — Web Deploy Info
 =========================
-Recorded: 2026-10-13
+Recorded: 2026-10-27 (after v1.22 local sync)
 
 WHAT IS LIVE / DEPLOYED
 -----------------------
-This folder (~/Downloads/kana/web-deploy) is a git repo and is the project
-that is deployed and live right now.
+This folder (~/Downloads/kana/web-deploy) is the deployed GitHub Pages repo,
+but the v1.22 files are currently LOCAL/UNCOMMITTED. The live site is still
+the last pushed version.
 
   Live URL   : https://nahid77777771-maker.github.io/kana-pet/
-  Status     : HTTP 200 (live)
-  Live version reported by page: KanaPet v1.19 (footer)
-  v1.19 = BUILT-IN OFFLINE VOICE PACK (every kana/word speaks from bundled
-          audio; speaker button on cards; TTS only as fallback) +
-          web "Download Android app (APK)" link.
-  Download APK: https://github.com/nahid77777771-maker/kana-pet/releases/latest/download/KanaPet.apk
-  (GitHub Release asset, always points to newest build)
+  Live version: KanaPet v1.19 (last pushed)
+  Local files : KanaPet v1.22 (synced 2026-10-27, not committed/pushed)
+  Latest public APK release: v1.19
+  Local APK  : project files/apk/KanaPet-v1.22.apk (not released)
+  Download URL (when release exists):
+    https://github.com/nahid77777771-maker/kana-pet/releases/latest/download/KanaPet.apk
+
+WHY NOT PUSHED
+--------------
+Nahid explicitly said he will test first, then push. Do not commit or push
+web-deploy until he confirms v1.22 works on Android.
 
 GIT DETAILS
 -----------
   Remote (origin): https://github.com/nahid77777771-maker/kana-pet.git
   Branch         : main
-  Status         : working tree clean, up to date with origin/main
-  Last commit    : 879754e  "KanaPet web version — initial deploy"
-                   date 2026-10-13 19:50:23 +0600
+  Status         : working tree DIRTY (v1.22 changes + untracked new assets)
+  Last commit    : 49ef6d1  "v1.19: built-in offline voice pack (1003 clips),
+                    web Download-APK link, skip-btn fix, docs"
   Deploy method  : GitHub Pages (.nojekyll present)
 
 FILES
 -----
-  index.html        <- web landing/version wrapper (== kanapet/www/web-version.html)
-  app-shell.html    <- app shell (== kanapet/www/index.html)
-  css/  js/         <- identical to source
+  index.html        <- web landing/version wrapper (== www/web-version.html)
+  app-shell.html    <- app shell (== www/index.html)
+  css/ js/          <- identical to source
+  fonts/ icons/     <- local fonts/icons for offline PWA
+  audio/            <- 1003 offline voice clips
+  manifest.webmanifest + sw.js
   .nojekyll         <- disables Jekyll processing (GitHub Pages)
 
 RELATION TO SOURCE
 ------------------
-  web-deploy is byte-identical to the app source in:
+  web-deploy is a copy of:
      ~/Downloads/kana/project files/kanapet/www/
-  Only the HTML wrapper names differ (index.html/app-shell.html).
+  Two HTML wrappers are renamed:
+     index.html     == www/web-version.html
+     app-shell.html == www/index.html
+  Current source VERSION : 1.23 (next build)
+  Current APK            : v1.22 local
+  Current web files      : v1.22 local (unpushed)
 
-WARNING — DEPLOYED WEB LAG (historical, FIXED 2026-10-13 with v1.18)
----------------------------------------------------
-  This file was first written when the live web (v1.15) was behind the source.
-  The v1.18 deploy fixed that: live web == current source (both APK and web).
-  Source VERSION file   : 1.20 (next APK build)
-  APKs shipped          : up to v1.19
-  Memory / policy docs  : refreshed in the same update (SESSION_MEMORY, policy).
+V1.22 LOCAL CHANGES
+-------------------
+  - 10-minute word reminders: native Android alarm chain + Profile history,
+    test send, exact-alarm shortcut; web timer/SW while page is open.
+  - Notification order: kana -> English -> Bangla; Bangla labels when app is
+    in Bangla.
+  - Full dynamic Bangla UI incl. language selector, pet speech, charts,
+    history/review strings, accessibility labels.
+  - 817 curated Bangla meanings.
+  - PWA cache now includes all 8 local fonts (26 core files).
+  - Session count fixed; onboarding `<br>` fixed; SW notify fallback fixed.
+  - Footer/version/APK: v1.22.
 
-FOLDER LAYOUT NOTE
-------------------
-  ~/Downloads/kana itself is NOT a git repo.
-  The only git repo inside it is this web-deploy folder.
-
-  ~/Downloads/kana/
-  ├── policy.txt
-  ├── project details/      (CHANGE_HISTORY.md, SESSION_MEMORY.md)
-  └── project files/
-      ├── apk/              (KanaPet-v1.7 ... v1.18, v1.19)
-      └── kanapet/          (app source; VERSION = 1.20)
-  └── web-deploy/           (GIT REPO — deployed & live)
-
-v1.18 CHANGE (2026-10-13)
-  - Mic icon + voice recognition (listening) feature REMOVED.
-  - Sound on every letter: tap a kana / chart tile / review row to hear it
-    (Japanese TTS, ja-JP).
-  - APK index.html and web web-version.html were resynced (identical now).
-  - Details: project details/CHANGE_HISTORY.md, Session 12.
-
-v1.19 CHANGE (2026-10-13)
-  - BUILT-IN VOICE PACK: 1003 audio clips (www/audio/<hash>.mp3) bundled
-    inside the app for EVERY kana card + N5 reading word. Speaker button /
-    tap-on-letter now plays the local clip — works fully OFFLINE with zero
-    downloads and no OS Japanese voice needed. Device TTS is only a fallback
-    if a clip is missing.
-  - Web page footer gets a "Download Android app (APK)" link that points to
-    the GitHub Release (latest asset).
-  - Generator tool: project files/kanapet/tools/gen_voicepack.js (regenerate
-    with `node tools/gen_voicepack.js`; hash MUST match hashKey() in app.js).
-  - Fixed latent bug: Skip button refs a removed #voice-status element.
+TO DEPLOY LATER
+---------------
+```bash
+cd ~/Downloads/kana
+# re-sync if source changed:
+cp "project files/kanapet/www/web-version.html" web-deploy/index.html
+cp "project files/kanapet/www/index.html"        web-deploy/app-shell.html
+cp "project files/kanapet/www/manifest.webmanifest" "project files/kanapet/www/sw.js" web-deploy/
+rsync -a --delete "project files/kanapet/www/js/"    web-deploy/js/
+rsync -a --delete "project files/kanapet/www/css/"   web-deploy/css/
+rsync -a --delete "project files/kanapet/www/fonts/" web-deploy/fonts/
+rsync -a --delete "project files/kanapet/www/icons/" web-deploy/icons/
+rsync -a --delete "project files/kanapet/www/audio/" web-deploy/audio/
+cd web-deploy
+git add -A
+git commit -m "v1.22: 10-minute reminders + full Bangla UI + PWA offline fonts"
+git push origin main
+```
+Then create release v1.22 and upload the APK as asset `KanaPet.apk` so the web
+Download button resolves to the new version.

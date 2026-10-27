@@ -113,14 +113,14 @@
         groups[t].forEach(function(item) {
           html += '<div class="chart-cell">';
           html += '<div class="chart-romaji">' + item.romaji + '</div>';
-          html += '<div class="chart-kana jp kana-sound" data-speak="' + item.hira + '" role="button" tabindex="0" aria-label="Hear ' + item.romaji + '">' + item.hira + '</div>';
-          html += '<div class="chart-kana jp kana-sound" data-speak="' + item.kata + '" role="button" tabindex="0" aria-label="Hear ' + item.romaji + '">' + item.kata + '</div>';
+          html += '<div class="chart-kana jp kana-sound" data-speak="' + item.hira + '" role="button" tabindex="0" aria-label="' + (window.I18n ? window.I18n.t('ariaHearKana').split('{romaji}').join(item.romaji) : 'Hear ' + item.romaji) + '">' + item.hira + '</div>';
+          html += '<div class="chart-kana jp kana-sound" data-speak="' + item.kata + '" role="button" tabindex="0" aria-label="' + (window.I18n ? window.I18n.t('ariaHearKana').split('{romaji}').join(item.romaji) : 'Hear ' + item.romaji) + '">' + item.kata + '</div>';
           html += '</div>';
         });
         html += '</div></div>';
       }
     });
-    if (html === '') html = '<div style="text-align:center;padding:40px;color:var(--muted)">No results</div>';
+    if (html === '') html = '<div style="text-align:center;padding:40px;color:var(--muted)">' + (window.I18n ? window.I18n.t('noResults') : 'No results') + '</div>';
     container.innerHTML = html;
   }
   
