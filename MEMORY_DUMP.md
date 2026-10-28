@@ -1,21 +1,21 @@
 # KanaPet — Web Deploy Memory / Resume Playbook
-> Updated 2026-10-27 for v1.23. Main resume file:
+> Updated 2026-10-28 for v1.25. Main resume file:
 > `~/Downloads/kana/project details/SESSION_MEMORY.md`.
 
 ## 1. State
 - **Live URL:** https://nahid77777771-maker.github.io/kana-pet/
-- **Live version:** v1.23, verified 2026-10-27.
-- **Code commit:** `952cab3` `v1.23: 4 offline voice actors + pet emotion sounds`.
-- **Latest APK release:** v1.23, asset `KanaPet.apk` (49,939,959 bytes).
-- **Local APK:** `project files/apk/KanaPet-v1.23.apk`.
-- **Source `VERSION`:** 1.24 (next build).
-- v1.22 (`abafd6c`) was also pushed and verified before v1.23.
+- **Live version:** v1.25 pushed 2026-10-28 (verify after Pages rebuild).
+- **Code commit:** `83535e5` `v1.25: minimal Learn tab, fixed romaji eye, Review meanings`.
+- **Latest APK release:** v1.25, asset `KanaPet.apk` (49,940,783 bytes).
+- **Local APK:** `project files/apk/KanaPet-v1.25.apk`.
+- **Source `VERSION`:** 1.26 (next build).
+- Previous code: `952cab3` (v1.23). v1.24 was APK-only, not pushed.
 
 ## 2. Git
 - Remote: `https://github.com/nahid77777771-maker/kana-pet.git` (origin)
 - Branch: `main`; GitHub Pages from repo root; `.nojekyll` present.
 - Audio is ~45 MB, so pushes can take a while.
-- `web-deploy` docs are a follow-up commit; code commit `952cab3` is the v1.23 code.
+- `web-deploy` docs are a follow-up commit; code commit `83535e5` is the v1.25 code.
 
 ## 3. File mapping (source → deploy)
 | Deploy file | Source |
@@ -42,31 +42,36 @@ rsync -a --delete "project files/kanapet/www/audio/" web-deploy/audio/
 cd web-deploy && git add -A && git commit -m "..." && git push origin main
 ```
 
-## 5. What v1.23 contains
-- **Voice actors:** Momo (root, original female), Nanami
-  (`audio/nanami/`, natural female), Yuki (`audio/yuki/`, Nanami +20Hz), Keita
-  (`audio/keita/`, natural male). 1003 clips each; default Nanami; Profile
-  cards select + preview `わたし`; fallback selected → Momo → device TTS.
-- **Pet sounds:** WebAudio mew/chirp/purr/boop/sing/happy/sad/celebrate/
-  grumble/sleepy/wobble; pet taps, tab changes, correct/wrong, celebration.
-  Profile toggle `settings.petSounds` (default on).
-- **PWA:** cache `kanapet-v1.23`; 26 core files incl. 8 fonts; audio regex
+## 5. What v1.25 contains
+- **Review meanings:** Missed + History records store `key` + `meaning` on
+  every answer and render a localized meaning line (`water`, `fish`; for kana
+  cards `みず · water`). Legacy records get meanings via `recordEntry()` lookup.
+- **Eye reveal:** eye ON shows the example word + meaning on the card front
+  (`さかな (sakana) · fish`; reading/vocab just the meaning) and also reveals
+  reading-card romaji until the session ends.
+- **v1.24 Learn tab:** only Missed / Got it; Skip row + instruction text gone;
+  eye in the progress row; no-scroll session layout 360×600–800; eye patches
+  cards in place (flipped answers stay visible).
+- **PWA:** cache `kanapet-v1.25`; 26 core files incl. 8 fonts; audio regex
   `/\/audio\/.*\.mp3$/` caches subdirectory packs on first play.
-- Bangla/English labels for the new controls.
-- Version strings/APK: v1.23, `12300`.
+- Voice actors (Momo/Nanami/Yuki/Keita), pet sounds, 10-min reminders and
+  Bangla UI unchanged from v1.23.
 
 ## 6. Verification
-- Headless file test: 4 cards; default Nanami; all four audio paths; selection
-  persists; pet sounds off=0/on oscillators; Bangla labels; 0 errors.
-- PWA HTTP test: SW `kanapet-v1.23`, 26 core files, 8 fonts, 4 audio clips
-  cached, offline reload, voice persists; 0 errors.
-- APK: 12300 / 1.23 / sdk 30–34; 1003 root + 3009 subdir clips; debug-signed;
-  key assets match source. No real-device test yet.
+- Headless Chromium 151 (360×640/800): eye ON shows front word + meaning, no
+  face overflow; Review Missed + History show localized meanings; legacy
+  records backfilled (`み` → `みず · water`, `みず` → `water`).
+- Re-checked v1.24: eye keeps flipped card; session has no scroll; Skip/hint
+  elements absent; 0 app errors.
+- APK v1.25: 12500 / 1.25 / sdk 30–34; APK `assets/public` JS/HTML/SW match
+  source; debug-signed. No real-device test yet.
+- Web push: verify live footer shows v1.25 and SW cache `kanapet-v1.25` after
+  GitHub Pages rebuild.
 
 ## 7. Architecture (web)
 - `index.html` = web entry; `app-shell.html` = APK shell copy.
 - `www/js/n5words.js` (743 words) MUST load before `data.js`.
-- `www/js/app.js` = sessions/audio/voice actor/XP/i18n.
+- `www/js/app.js` = sessions/audio/voice actor/XP/i18n/review records.
 - `www/js/pet.js` = pet actions/speech + WebAudio sounds.
 - `www/js/reminders.js` = native/web reminders + history.
 - `www/js/charts.js`, `onboard.js`, `i18n.js` = support.
@@ -74,9 +79,12 @@ cd web-deploy && git add -A && git commit -m "..." && git push origin main
 
 ## 8. Gotchas
 - Bump `kanaPetVersion` en+bn, both HTML fallbacks, and SW cache together.
-- `VERSION` is 1.24; APK v1.23 is built/released.
+- `VERSION` is 1.26; APK v1.25 is built/released.
+- History keeps old records working via the kana + romaji + group backfill in
+  `recordEntry()` — do not remove it.
 - Edge only has Nanami + Keita for natural Japanese; Yuki is a pitch variant.
 - PWA audio is cached on first play, not pre-cached.
 - Keep `app-shell.html` in deploy for compatibility even though SW no longer
   caches it.
-- No push without build/test; v1.22/v1.23 pushes were explicitly approved.
+- No push without build/test; v1.22, v1.23 and v1.25 pushes were explicitly
+  approved by Nahid.

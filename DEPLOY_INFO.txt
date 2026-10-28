@@ -1,17 +1,17 @@
 KanaPet — Web Deploy Info
 =========================
-Recorded: 2026-10-27 (v1.23 pushed; docs follow-up commit)
+Recorded: 2026-10-28 (v1.25 pushed; docs follow-up commit)
 
 WHAT IS LIVE / DEPLOYED
 -----------------------
 This folder (~/Downloads/kana/web-deploy) is the deployed GitHub Pages repo.
 
   Live URL    : https://nahid77777771-maker.github.io/kana-pet/
-  Live version: KanaPet v1.23 (verified 2026-10-27)
-  Code commit : 952cab3  "v1.23: 4 offline voice actors + pet emotion sounds"
-  APK release : v1.23  (asset KanaPet.apk, 49,939,959 bytes)
-  Local APK   : project files/apk/KanaPet-v1.23.apk
-  Next build  : v1.24 (source VERSION)
+  Live version: KanaPet v1.25 (verify after GitHub Pages rebuild)
+  Code commit : 83535e5  "v1.25: minimal Learn tab, fixed romaji eye, Review meanings"
+  APK release : v1.25  (asset KanaPet.apk, 49,940,783 bytes)
+  Local APK   : project files/apk/KanaPet-v1.25.apk
+  Next build  : v1.26 (source VERSION)
   Download URL: https://github.com/nahid77777771-maker/kana-pet/releases/latest/download/KanaPet.apk
 
 GIT DETAILS
@@ -19,8 +19,8 @@ GIT DETAILS
   Remote (origin): https://github.com/nahid77777771-maker/kana-pet.git
   Branch         : main
   Deploy method  : GitHub Pages (.nojekyll present)
-  Previous code  : abafd6c  v1.22
-  Current code   : 952cab3  v1.23 (docs follow-up commit after this one)
+  Previous code  : 952cab3  v1.23
+  Current code   : 83535e5  v1.25 (docs follow-up commit after this one)
 
 FILES
 -----
@@ -39,21 +39,24 @@ RELATION TO SOURCE
   Two HTML wrappers are renamed:
      index.html     == www/web-version.html
      app-shell.html == www/index.html
-  Source VERSION : 1.24 (next build)
-  Current APK    : v1.23
-  Current web    : v1.23 (pushed)
+  Source VERSION : 1.26 (next build)
+  Current APK    : v1.25
+  Current web    : v1.25 (pushed)
 
-V1.23 CHANGES
+V1.25 CHANGES
 -------------
-  - Four selectable offline voice actors: Momo (original female), Nanami
-    (natural female), Yuki (bright Nanami variant), Keita (natural male).
-    1003 clips each; default Nanami; Profile cards select/preview.
-  - Cute WebAudio pet emotion sounds (mew/chirp/purr/happy/sad/celebrate)
-    with Profile "Pet sounds" toggle.
-  - PWA cache bumped to kanapet-v1.23; audio subdirectory regex now caches
-    nanami/yuki/keita clips on first play.
-  - APK grew to ~48 MB (4 × 1003 audio clips bundled).
-  - Bangla + English labels for voice actor / pet sounds.
+  - Review Missed + History now store and show each card's meaning (English
+    and Bangla). Legacy records are backfilled by kana + romaji + group.
+  - Eye ON also reveals the example word + meaning on the card front:
+    kana cards show "さかな (sakana) · fish", reading/vocab cards show "water".
+  - Answers now save `key` + `meaning` in errors/history records.
+
+V1.24 CHANGES (included in this web update)
+-------------------------------------------
+  - Minimal Learn tab: only Missed / Got it remain; Skip + "I don't know" row
+    and the "Tap a letter..." instruction text removed.
+  - Eye moved into the session progress row; no scrolling during a session
+    (fits 360×600–800); eye patches cards in place so a flipped answer stays.
 
 TO DEPLOY NEXT TIME
 -------------------
