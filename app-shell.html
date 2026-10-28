@@ -85,6 +85,7 @@
         <div class="session-progress">
           <div class="bar"><div id="session-bar" style="width:0%"></div></div>
           <span class="count" id="session-count">0 / 0</span>
+          <button class="romaji-btn" id="romaji-toggle" aria-label="Toggle romaji on/off" title="Toggle romaji" aria-pressed="true" data-i18n-aria-label="romajiToggle" data-i18n-title="romajiToggle"></button>
           <button class="stop-btn" id="stop-btn" aria-label="Stop session" title="Stop this session" data-i18n-aria-label="ariaStopSession" data-i18n-title="ariaStopSession">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none"/></svg>
             <span data-i18n="stop">Stop</span>
@@ -107,16 +108,8 @@
               <span data-i18n="gotIt">Got it</span><span class="lbl" data-i18n="knewIt">knew it</span>
             </button>
           </div>
-          <div class="lc-row sub">
-            <button class="small-btn" id="skip-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
-              <span data-i18n="skip">Skip</span><span class="lbl" data-i18n="dontKnow">I don't know</span>
-            </button>
-            <button class="small-btn" id="romaji-toggle" aria-label="Toggle romaji on/off" title="Toggle romaji" data-i18n-aria-label="romajiToggle" data-i18n-title="romajiToggle"></button>
-          </div>
         </div>
         <button class="btn btn-primary" id="next-btn" style="width:100%;margin-top:10px;display:none" data-i18n="nextCard">Next card</button>
-        <div class="voice-status" id="voice-status" data-i18n="tapLetterHint">Tap a letter to hear it · self-rate with the buttons below.</div>
       </div>
 
       <div class="panel hidden" id="summary-panel" style="margin-top:14px">
@@ -274,7 +267,7 @@
         <h3 data-i18n="dangerZone">Danger zone</h3>
         <button class="btn btn-warn" id="reset-btn" style="width:100%" data-i18n="resetAllProgress">Reset all progress</button>
       </div>
-      <p style="text-align:center;color:var(--muted);font-size:12px" data-i18n="kanaPetVersion">KanaPet v1.23 · 4 voices · pet sounds · 10-min words · works offline</p>
+      <p style="text-align:center;color:var(--muted);font-size:12px" data-i18n="kanaPetVersion">KanaPet v1.25 · 4 voices · pet sounds · 10-min words · works offline</p>
     </div>
   </div>
 

@@ -1,6 +1,6 @@
 /* KanaPet service worker — offline web app + notification display. */
 'use strict';
-var CACHE = 'kanapet-v1.23';
+var CACHE = 'kanapet-v1.25';
 var CORE = [
   './', 'index.html', 'manifest.webmanifest',
   'css/fonts.css', 'css/style.css', 'css/charts.css',

@@ -214,10 +214,11 @@
     var n = Math.min(state.settings.sessionSize, pool.length);
     var deck = shuffle(pool.slice()).slice(0, n);
     if (deck.length === 0) { toast(window.I18n ? window.I18n.t('noSetsSelected') : 'No characters selected — pick sets in Profile.'); return; }
-    session = { deck: deck, size: deck.length, correct: 0, total: 0, fromReview: !!fromReview, phase: 'idle', timers: [] };
+    session = { deck: deck, size: deck.length, correct: 0, total: 0, fromReview: !!fromReview, phase: 'idle', romajiPeek: false, timers: [] };
     $('#start-panel').classList.add('hidden');
     $('#summary-panel').classList.add('hidden');
     $('#deck-area').classList.remove('hidden');
+    $('.tab-content').classList.add('no-scroll');
     renderDeck();
     renderControls();
     updateSessionProgress();
@@ -229,6 +230,30 @@
     if (window.MEANINGS_WORD_BN && window.MEANINGS_WORD_BN[meaning]) return window.MEANINGS_WORD_BN[meaning];
     if (window.MEANINGS_BN && window.MEANINGS_BN[meaning]) return window.MEANINGS_BN[meaning];
     return '';
+  }
+  function localizedMeaning(meaning) {
+    if (!meaning) return '';
+    return window.I18n && window.I18n.getLang() === 'bn' ? (meaningBn(meaning) || meaning) : meaning;
+  }
+  // Resolve a stored history/error record back to its KANA entry. New records
+  // carry `key`; old ones are matched by kana + romaji + group.
+  function recordEntry(rec) {
+    if (!rec) return null;
+    if (rec.key) { var hit = KANA.byKey(rec.key); if (hit) return hit; }
+    for (var i = 0; i < KANA.ALL.length; i++) {
+      var e = KANA.ALL[i];
+      if (e.kana === rec.kana && e.romaji === rec.romaji && e.group === rec.group) return e;
+    }
+    return null;
+  }
+  function recordMeaningLine(rec) {
+    var entry = recordEntry(rec);
+    var meaning = rec.meaning || (entry && entry.example && entry.example.meaning) || '';
+    if (!meaning) return '';
+    var word = entry && entry.example ? entry.example.word : '';
+    var isWordCard = rec.type === 'reading' || rec.type === 'vocab' || (word && word === rec.kana);
+    var text = localizedMeaning(meaning);
+    return word && !isWordCard ? word + ' · ' + text : text;
   }
 
   function fillCard(el, entry, depth) {
@@ -243,7 +268,8 @@
     var hintMode = state.settings.romajiHint;
     var cs = state.stats.correctStreak[entry.key] || 0;
     var isReading = entry.group === 'n5read'; // reading test: don't spoil the answer on the front
-    var showHint = state.settings.showRomaji && !isReading && (hintMode === 'on' || (hintMode === 'auto' && cs < 3));
+    var peek = !!(session && session.romajiPeek); // manual reveal via the eye button
+    var showHint = state.settings.showRomaji && (peek || (!isReading && (hintMode === 'on' || (hintMode === 'auto' && cs < 3))));
     var hideRom = !state.settings.showRomaji;
     var romStyle = hideRom ? ' style="display:none"' : '';
     var groupName = groupLabel(entry.group, entry.type);
@@ -252,6 +278,14 @@
     var fitBack = fitKana(el, entry.kana, 78);
     var fitRom = fitRomaji(el, entry.romaji, 28);
     var fitHint = fitRomaji(el, entry.romaji, 18);
+    var exExtra = '';
+    if (entry.example) {
+      var exWord = entry.example.word;
+      var exRom = entry.example.romaji;
+      var exMean = localizedMeaning(entry.example.meaning);
+      var isWordCard = isReading || entry.type === 'vocab' || exWord === entry.kana;
+      exExtra = isWordCard ? exMean : exWord + (exRom ? ' (' + exRom + ')' : '') + ' · ' + exMean;
+    }
     el.innerHTML =
       '<div class="card-flip">' +
         '<div class="face front">' +
@@ -259,6 +293,7 @@
           '<span class="group-tag">' + groupName + '</span>' +
           '<p class="kana-big jp kana-sound" data-speak="' + entry.kana + '" role="button" tabindex="0" aria-label="' + tr('ariaHearLetter') + '" style="font-size:' + fitFront + 'px">' + entry.kana + '</p>' +
           '<p class="romaji-hint" style="font-size:' + fitHint + 'px">' + (showHint ? entry.romaji : '&nbsp;') + '</p>' +
+          (exExtra ? '<p class="front-extra"' + (peek ? '' : ' style="display:none"') + '>' + exExtra + '</p>' : '') +
           '<span class="tap-hint">' + tr('tapCardHint') + '</span>' +
           '<button class="speaker-btn" data-speak="' + entry.kana + '" aria-label="' + tr('ariaPlayAudio') + '">' + speakerIcon() + '</button>' +
         '</div>' +
@@ -333,9 +368,36 @@
     var dim = revealed ? '0.45' : '1';
     $('#missed-btn').style.opacity = dim;
     $('#got-it-btn').style.opacity = dim;
-    $('#skip-btn').style.opacity = dim;
     var rt = $('#romaji-toggle');
-    if (rt) rt.innerHTML = state.settings.showRomaji ? eyeIcon() : eyeOffIcon();
+    if (rt) {
+      rt.innerHTML = state.settings.showRomaji ? eyeIcon() : eyeOffIcon();
+      rt.setAttribute('aria-pressed', state.settings.showRomaji ? 'true' : 'false');
+    }
+  }
+
+  // Apply the romaji on/off state to the cards already on screen without
+  // re-rendering them (re-render would reset a flipped card / hide the answer).
+  function applyRomajiState() {
+    var show = !!state.settings.showRomaji;
+    ['#card0', '#card1', '#card2'].forEach(function (sel) {
+      var el = $(sel);
+      if (!el || el.style.display === 'none') return;
+      var entry = el.dataset.key && KANA.byKey(el.dataset.key);
+      if (!entry) return;
+      var hint = el.querySelector('.romaji-hint');
+      if (hint) hint.innerHTML = show ? entry.romaji : '&nbsp;';
+      var extra = el.querySelector('.front-extra');
+      if (extra) extra.style.display = show ? '' : 'none';
+      $$('.romaji, .ex-romaji', el).forEach(function (n) { n.style.display = show ? '' : 'none'; });
+    });
+  }
+
+  function setRomajiShown(show) {
+    state.settings.showRomaji = !!show;
+    if (session) session.romajiPeek = !!show;
+    save();
+    applyRomajiState();
+    renderControls();
   }
 
   /* ---------------- Answer handling ---------------- */
@@ -394,6 +456,7 @@
     } else {
       state.stats.correctStreak[entry.key] = 0;
       var er = state.errors[entry.key] || { count: 0, correctStreak: 0, kana: entry.kana, romaji: entry.romaji, type: entry.type, group: entry.group };
+      if (!er.meaning) er.meaning = (entry.example && entry.example.meaning) || '';
       er.count++; er.correctStreak = 0;
       state.errors[entry.key] = er;
       flashScreen('bad'); showResultBadge(false); beep([220, 180], 0.16); vibrate([80, 40, 80]);
@@ -403,7 +466,7 @@
       scheduleAdvance(1600);
     }
     state.stats.totalAnswered++;
-    state.history.unshift({ kana: entry.kana, romaji: entry.romaji, correct: correct, ts: Date.now(), type: entry.type, group: entry.group });
+    state.history.unshift({ key: entry.key, kana: entry.kana, romaji: entry.romaji, meaning: (entry.example && entry.example.meaning) || '', correct: correct, ts: Date.now(), type: entry.type, group: entry.group });
     if (state.history.length > 500) state.history.length = 500;
     save();
     updateBadge();
@@ -468,6 +531,7 @@
     $('#sum-msg').textContent = msg;
     $('#deck-area').classList.add('hidden');
     $('#summary-panel').classList.remove('hidden');
+    $('.tab-content').classList.remove('no-scroll');
     if (acc >= 80) { confettiBurst(); if (window.Pet) Pet.celebrate(); }
     else if (window.Pet) Pet.happy();
     session = null;
@@ -486,6 +550,7 @@
     $('#stop-modal').classList.remove('show');
     $('#deck-area').classList.add('hidden');
     $('#summary-panel').classList.add('hidden');
+    $('.tab-content').classList.remove('no-scroll');
     $('#start-panel').classList.remove('hidden');
     renderStartPanel();
     if (window.Pet) Pet.happy();
@@ -620,6 +685,7 @@
     $$('.tab-page').forEach(function (p) { p.classList.remove('active'); });
     $('#tab-' + name).classList.add('active');
     $$('.tabbar button').forEach(function (b) { b.classList.toggle('active', b.dataset.tab === name); });
+    $('.tab-content').classList.toggle('no-scroll', name === 'learn' && !!session);
     if (name === 'review') renderReview();
     if (name === 'progress') renderProgress();
     if (name === 'profile') renderProfile();
@@ -655,10 +721,12 @@
       var d = new Date(r.ts);
       var time = (d.getMonth() + 1) + '/' + d.getDate() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
       var tag = groupLabel(r.group, r.type);
+      var meaning = recordMeaningLine(r);
       var row = document.createElement('div');
       row.className = 'error-row';
       row.innerHTML = '<span class="k jp kana-sound" data-speak="' + r.kana + '" role="button" tabindex="0">' + r.kana + '</span>' +
         '<div class="info"><div class="r">' + r.romaji + '</div>' +
+        (meaning ? '<div class="mn">' + meaning + '</div>' : '') +
         '<div class="sub">' + tag + ' · ' + time + '</div></div>' +
         '<span class="miss" style="background:' + (r.correct ? 'rgba(22,163,74,.12)' : 'var(--accent2-soft)') + ';color:' + (r.correct ? 'var(--good)' : 'var(--accent2)') + '">' + (r.correct ? tr('gotIt') : tr('missed')) + '</span>';
       list.appendChild(row);
@@ -691,10 +759,12 @@
       var typeName = typeLabel(er.type);
       var groupName = groupLabel(er.group, er.type);
       var meta = groupName && groupName !== typeName ? typeName + ' · ' + groupName : typeName;
+      var meaning = recordMeaningLine(er);
       var row = document.createElement('div');
       row.className = 'error-row';
       row.innerHTML = '<span class="k jp kana-sound" data-speak="' + er.kana + '" role="button" tabindex="0">' + er.kana + '</span>' +
         '<div class="info"><div class="r">' + er.romaji + '</div>' +
+        (meaning ? '<div class="mn">' + meaning + '</div>' : '') +
         '<div class="sub">' + meta + ' · ' + tr('correctStreak', { streak: er.correctStreak }) + '</div></div>' +
         '<span class="miss">' + tr('missedTimes', { count: er.count }) + '</span>';
       list.appendChild(row);
@@ -786,9 +856,7 @@
     $('#set-romaji').addEventListener('change', function (e) { state.settings.romajiHint = e.target.value; save(); });
     $('#set-autoplay').addEventListener('change', function (e) { state.settings.autoplayAudio = e.target.checked; save(); });
     $('#set-showromaji').addEventListener('change', function (e) {
-      state.settings.showRomaji = e.target.checked; save();
-      if (session && session.phase === 'idle') renderDeck();
-      renderControls();
+      setRomajiShown(e.target.checked);
       toast(e.target.checked ? (window.I18n?window.I18n.t('romajiShown'):'Romaji shown.') : (window.I18n?window.I18n.t('romajiHidden'):'Romaji hidden — practice by listening!'));
     });
     $('#set-autoadvance').addEventListener('change', function (e) { state.settings.autoAdvance = e.target.checked; save(); toast(e.target.checked ? tr('autoAdvanceOn') : tr('autoAdvanceOff')); });
@@ -919,15 +987,12 @@
     $('#seg-history').addEventListener('click', function () { reviewView = 'history'; renderReview(); });
     $('#got-it-btn').addEventListener('click', function () { handleAnswer(true); });
     $('#missed-btn').addEventListener('click', function () { handleAnswer(false); });
-    $('#skip-btn').addEventListener('click', function () { if (session && session.phase === 'idle') { handleAnswer(false); } });
     $('#stop-btn').addEventListener('click', function () { if (session) $('#stop-modal').classList.add('show'); });
     $('#stop-cancel').addEventListener('click', function () { $('#stop-modal').classList.remove('show'); });
     $('#stop-confirm').addEventListener('click', stopSession);
     $('#next-btn').addEventListener('click', function () { if (session && session.phase === 'revealed') flingAndAdvance(); });
     $('#romaji-toggle').addEventListener('click', function () {
-      state.settings.showRomaji = !state.settings.showRomaji; save();
-      if (session && session.phase === 'idle') renderDeck();
-      renderControls();
+      setRomajiShown(!state.settings.showRomaji);
       toast(state.settings.showRomaji ? (window.I18n?window.I18n.t('romajiShown'):'Romaji shown.') : (window.I18n?window.I18n.t('romajiHidden'):'Romaji hidden — practice by listening!'));
     });
 
