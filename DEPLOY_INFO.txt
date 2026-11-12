@@ -6,17 +6,17 @@ WHAT IS LIVE / DEPLOYED
 -----------------------
 This folder (~/Downloads/kana/web-deploy) is the deployed GitHub Pages repo.
 
-  Live URL    : https://nahid77777771-maker.github.io/kana-pet/
+  Live URL    : https://nahidsarker771.github.io/kana-pet/
   Live version: KanaPet v1.25 (verify after GitHub Pages rebuild)
   Code commit : 83535e5  "v1.25: minimal Learn tab, fixed romaji eye, Review meanings"
   APK release : v1.25  (asset KanaPet.apk, 49,940,783 bytes)
   Local APK   : project files/apk/KanaPet-v1.25.apk
   Next build  : v1.26 (source VERSION)
-  Download URL: https://github.com/nahid77777771-maker/kana-pet/releases/latest/download/KanaPet.apk
+  Download URL: https://github.com/nahidsarker771/kana-pet/releases/latest/download/KanaPet.apk
 
 GIT DETAILS
 -----------
-  Remote (origin): https://github.com/nahid77777771-maker/kana-pet.git
+  Remote (origin): https://github.com/nahidsarker771/kana-pet.git
   Branch         : main
   Deploy method  : GitHub Pages (.nojekyll present)
   Previous code  : 952cab3  v1.23

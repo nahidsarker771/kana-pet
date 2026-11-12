@@ -3,7 +3,7 @@
 > `~/Downloads/kana/project details/SESSION_MEMORY.md`.
 
 ## 1. State
-- **Live URL:** https://nahid77777771-maker.github.io/kana-pet/
+- **Live URL:** https://nahidsarker771.github.io/kana-pet/
 - **Live version:** v1.25 pushed 2026-10-28 (verify after Pages rebuild).
 - **Code commit:** `83535e5` `v1.25: minimal Learn tab, fixed romaji eye, Review meanings`.
 - **Latest APK release:** v1.25, asset `KanaPet.apk` (49,940,783 bytes).
@@ -12,7 +12,7 @@
 - Previous code: `952cab3` (v1.23). v1.24 was APK-only, not pushed.
 
 ## 2. Git
-- Remote: `https://github.com/nahid77777771-maker/kana-pet.git` (origin)
+- Remote: `https://github.com/nahidsarker771/kana-pet.git` (origin)
 - Branch: `main`; GitHub Pages from repo root; `.nojekyll` present.
 - Audio is ~45 MB, so pushes can take a while.
 - `web-deploy` docs are a follow-up commit; code commit `83535e5` is the v1.25 code.

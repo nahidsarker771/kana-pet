@@ -173,7 +173,7 @@
     try {
       if (window.Capacitor) return;
       var link = document.createElement('a');
-      link.href = 'https://github.com/nahid77777771-maker/kana-pet/releases/latest/download/KanaPet.apk';
+      link.href = 'https://github.com/nahidsarker771/kana-pet/releases/latest/download/KanaPet.apk';
       link.target = '_blank'; link.rel = 'noopener';
       link.style.cssText = 'display:inline-block;margin:10px auto;padding:9px 18px;border:1.5px solid currentColor;border-radius:10px;color:var(--accent,#4a90d9);text-decoration:none;font-size:13px;font-weight:600';
       link.setAttribute('data-i18n', 'downloadApk');
