@@ -138,6 +138,28 @@
       <div class="error-list" id="history-list" style="display:none"></div>
     </div>
 
+    <!-- KANA TAB -->
+    <div class="tab-page" id="tab-kana">
+      <div class="kana-head">
+        <h2 data-i18n="kanaCharts">Kana Charts (all letters)</h2>
+        <p data-i18n="kanaTabHint">Tap any letter to hear it.</p>
+      </div>
+      <div class="chart-controls kana-chart-controls">
+        <div class="chip-row">
+          <button class="chip on" data-kana-chart="all" data-i18n="all">All</button>
+          <button class="chip" data-kana-chart="hira" data-i18n="hiragana">Hiragana</button>
+          <button class="chip" data-kana-chart="kata" data-i18n="katakana">Katakana</button>
+          <button class="chip" data-kana-chart="basic" data-i18n="monographs">Monographs</button>
+          <button class="chip" data-kana-chart="dakuten" data-i18n="tenTen">Ten-ten</button>
+          <button class="chip" data-kana-chart="handakuten" data-i18n="handakuten">Handakuten</button>
+          <button class="chip" data-kana-chart="yoon" data-i18n="yoonSet">Yōon</button>
+        </div>
+        <input type="text" id="kana-chart-search" class="chart-search" placeholder="Search..." data-i18n-placeholder="search">
+        <button class="btn btn-ghost" id="kana-chart-clear" data-i18n="clear">Clear</button>
+      </div>
+      <div id="kana-charts-container"></div>
+    </div>
+
     <!-- PROGRESS TAB -->
     <div class="tab-page" id="tab-progress">
       <div class="kpi-grid">
@@ -162,11 +184,26 @@
 
     <!-- PROFILE TAB -->
     <div class="tab-page" id="tab-profile">
-      <div class="setting-group">
-        <h3 data-i18n="profile">Profile</h3>
-        <div class="field"><label data-i18n="yourName">Your name</label><input type="text" id="set-username" maxlength="20"></div>
-        <div class="field"><label data-i18n="petName">Pet's name</label><input type="text" id="set-petname" maxlength="20"></div>
-        <div class="field"><label data-i18n="language">Language</label>
+      <div class="profile-jump" data-i18n-aria-label="settingsSections" aria-label="Settings sections">
+        <button class="chip" data-jump="group-profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span data-i18n="profile">Profile</span></button>
+        <button class="chip" data-jump="group-sets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span data-i18n="setsShort">Sets</span></button>
+        <button class="chip" data-jump="group-goals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg><span data-i18n="practice">Practice</span></button>
+        <button class="chip" data-jump="group-audio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><span data-i18n="audioShort">Audio</span></button>
+        <button class="chip" data-jump="reminders-group"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span data-i18n="wordsShort">Words</span></button>
+      </div>
+      <div class="setting-group profile-hero" id="group-profile">
+        <div class="hero-head">
+          <div class="profile-avatar" id="profile-avatar" aria-hidden="true">L</div>
+          <div class="hero-text">
+            <div class="hero-name" id="profile-hero-name">Learner</div>
+            <div class="hero-sub"><span data-i18n="level">Level</span> <b id="profile-hero-level">1</b><span class="hero-dot">·</span><span id="profile-hero-xp">0 XP</span></div>
+          </div>
+        </div>
+        <div class="field-grid">
+          <div class="field"><label data-i18n="yourName">Your name</label><input type="text" id="set-username" maxlength="20"></div>
+          <div class="field"><label data-i18n="petName">Pet's name</label><input type="text" id="set-petname" maxlength="20"></div>
+        </div>
+        <div class="field" style="margin-bottom:0"><label data-i18n="language">Language</label>
           <select class="setting-select" id="set-language">
             <option value="en" data-i18n="english">English</option>
             <option value="bn" data-i18n="bangla">বাংলা</option>
@@ -174,9 +211,10 @@
         </div>
       </div>
 
-      <div class="setting-group">
-        <h3 data-i18n="characterSets">Character sets</h3>
-        <div class="chip-row" style="margin-bottom:10px">
+      <div class="setting-group" id="group-sets">
+        <h3 class="group-title"><span class="group-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span data-i18n="characterSets">Character sets</span><span class="group-count" id="sets-count" aria-hidden="true">1/10</span></h3>
+        <div class="set-subhead" data-i18n="kanaWriting">Writing</div>
+        <div class="chip-row set-grid">
           <button class="chip" data-set="hiraganaBasic" data-i18n="hiraganaBasic">Hiragana basic</button>
           <button class="chip" data-set="katakanaBasic" data-i18n="katakanaBasic">Katakana basic</button>
           <button class="chip" data-set="hiraganaDakuten" data-i18n="hiraganaDakuten">Hiragana ten-ten (゛)</button>
@@ -184,18 +222,24 @@
           <button class="chip" data-set="hiraganaHandakuten" data-i18n="hiraganaMaru">Hiragana maru (゜)</button>
           <button class="chip" data-set="katakanaHandakuten" data-i18n="katakanaMaru">Katakana maru (゜)</button>
           <button class="chip" data-set="yoon" data-i18n="yoon">Yōon (advanced)</button>
+        </div>
+        <div class="set-subhead" data-i18n="vocabulary">Vocabulary</div>
+        <div class="chip-row set-grid set-grid-3">
           <button class="chip" data-set="n5" data-i18n="n5Vocab">JLPT N5 vocab</button>
           <button class="chip" data-set="n4" data-i18n="n4Vocab">JLPT N4 vocab</button>
           <button class="chip" data-set="n5read" data-i18n="n5Reading">N5 reading (kana)</button>
         </div>
-        <button class="btn btn-secondary" id="view-charts" style="width:100%;min-height:44px;margin-bottom:8px" data-i18n="viewAllKana">View all Hiragana & Katakana</button>
-        <button class="btn btn-secondary" id="mix-all" style="width:100%;min-height:44px" data-i18n="mixAllSets">Mix all sets</button>
+        <div class="set-actions">
+          <button class="btn btn-secondary" id="view-charts" data-i18n="viewAllKana">View all Hiragana & Katakana</button>
+          <button class="btn btn-secondary" id="mix-all" data-i18n="mixAllSets">Mix all sets</button>
+        </div>
       </div>
 
-      <div class="setting-group">
-        <h3 data-i18n="sessionGoals">Session &amp; goals</h3>
+      <div class="setting-group" id="group-goals">
+        <h3 class="group-title"><span class="group-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg></span><span data-i18n="sessionGoals">Session &amp; practice</span></h3>
         <div class="field"><label><span data-i18n="dailyGoalSetting">Daily goal</span> <span class="val" id="set-daily-val">20</span></label><input type="range" id="set-daily" min="10" max="100" step="5"></div>
         <div class="field"><label><span data-i18n="cardsPerSessionSetting">Cards per session</span> <span class="val" id="set-session-val">20</span></label><input type="range" id="set-session" min="10" max="100" step="5"></div>
+        <div class="set-subhead" data-i18n="duringPractice">During practice</div>
         <div class="field"><label data-i18n="romajiHintFront">Romaji hint on card front</label>
           <select class="setting-select" id="set-romaji">
             <option value="on" data-i18n="alwaysShow">Always show</option>
@@ -203,22 +247,20 @@
             <option value="auto" data-i18n="autoHide">Auto-hide after 3 correct</option>
           </select>
         </div>
-      </div>
-
-      <div class="setting-group">
-        <h3 data-i18n="audioFeedback">Audio &amp; feedback</h3>
-        <div class="toggle-row"><div><span class="t-label" data-i18n="autoplayAudio">Auto-play audio on reveal</span><span class="t-sub" data-i18n="japaneseTTS">Japanese TTS (ja-JP)</span></div><label class="switch"><input type="checkbox" id="set-autoplay"><span class="slider"></span></label></div>
         <div class="toggle-row"><div><span class="t-label" data-i18n="showRomajiLetters">Show romaji (English letters)</span><span class="t-sub" data-i18n="offPracticeHint">Off = practice without seeing readings</span></div><label class="switch"><input type="checkbox" id="set-showromaji" checked><span class="slider"></span></label></div>
         <div class="toggle-row"><div><span class="t-label" data-i18n="autoAdvance">Auto-advance cards</span><span class="t-sub" data-i18n="autoAdvanceHint">Off = answer stays until you tap Next</span></div><label class="switch"><input type="checkbox" id="set-autoadvance" checked><span class="slider"></span></label></div>
-        <div class="toggle-row"><div><span class="t-label" data-i18n="soundEffects">Sound effects</span><span class="t-sub" data-i18n="correctWrongChimes">Correct / wrong chimes</span></div><label class="switch"><input type="checkbox" id="set-sound"><span class="slider"></span></label></div>
-        <div class="toggle-row"><div><span class="t-label" data-i18n="petSounds">Pet sounds</span><span class="t-sub" data-i18n="petSoundsHint">Cute mews and chirps when you touch your pet</span></div><label class="switch"><input type="checkbox" id="set-petsounds"><span class="slider"></span></label></div>
         <div class="toggle-row"><div><span class="t-label" data-i18n="hapticFeedback">Haptic feedback</span><span class="t-sub" data-i18n="vibrateOnAnswer">Vibrate on answer</span></div><label class="switch"><input type="checkbox" id="set-haptic"><span class="slider"></span></label></div>
       </div>
 
-      <div class="setting-group" id="voice-group">
-        <h3 data-i18n="voiceActor">Voice actor</h3>
-        <p class="setting-note" data-i18n="voiceActorHint">Tap a voice to hear a sample. Every voice works offline.</p>
-        <div class="voice-grid" id="voice-grid">
+      <div class="setting-group" id="group-audio">
+        <h3 class="group-title"><span class="group-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg></span><span data-i18n="audioFeedback">Audio &amp; feedback</span></h3>
+        <div class="toggle-row"><div><span class="t-label" data-i18n="autoplayAudio">Auto-play audio on reveal</span><span class="t-sub" data-i18n="japaneseTTS">Japanese TTS (ja-JP)</span></div><label class="switch"><input type="checkbox" id="set-autoplay"><span class="slider"></span></label></div>
+        <div class="toggle-row"><div><span class="t-label" data-i18n="soundEffects">Sound effects</span><span class="t-sub" data-i18n="correctWrongChimes">Correct / wrong chimes</span></div><label class="switch"><input type="checkbox" id="set-sound"><span class="slider"></span></label></div>
+        <div class="toggle-row"><div><span class="t-label" data-i18n="petSounds">Pet sounds</span><span class="t-sub" data-i18n="petSoundsHint">Cute mews and chirps when you touch your pet</span></div><label class="switch"><input type="checkbox" id="set-petsounds"><span class="slider"></span></label></div>
+        <div class="setting-subblock" id="voice-group">
+          <div class="set-subhead" data-i18n="voiceActor">Voice actor</div>
+          <p class="setting-note" data-i18n="voiceActorHint">Tap a voice to hear a sample. Every voice works offline.</p>
+          <div class="voice-grid" id="voice-grid">
           <button type="button" class="voice-card" data-voice="momo" aria-pressed="false">
             <span class="voice-avatar" aria-hidden="true">M</span>
             <span class="voice-info"><span class="voice-name">Momo</span><span class="voice-desc" data-i18n="voiceOriginal">Original female</span></span>
@@ -239,11 +281,12 @@
             <span class="voice-info"><span class="voice-name">Keita</span><span class="voice-desc" data-i18n="voiceMale">Natural male</span></span>
             <svg class="voice-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 9v6h4l5 4V5L9 9H5z"/><path d="M17 8a5 5 0 0 1 0 8"/></svg>
           </button>
+          </div>
         </div>
       </div>
 
       <div class="setting-group" id="reminders-group">
-        <h3 data-i18n="wordStation">10-minute word station</h3>
+        <h3 class="group-title"><span class="group-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><span data-i18n="wordStation">10-minute word station</span></h3>
         <div class="toggle-row">
           <div>
             <span class="t-label" data-i18n="wordReminders">A new N5 word every 10 minutes</span>
@@ -263,11 +306,11 @@
         <button class="btn btn-secondary" id="reminder-practice" style="width:100%;margin-top:10px;display:none" data-i18n="practiceRecentWords">Practice recent words</button>
       </div>
 
-      <div class="setting-group">
-        <h3 data-i18n="dangerZone">Danger zone</h3>
+      <div class="setting-group danger-group">
+        <h3 class="group-title"><span class="group-icon danger" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span data-i18n="dangerZone">Danger zone</span></h3>
         <button class="btn btn-warn" id="reset-btn" style="width:100%" data-i18n="resetAllProgress">Reset all progress</button>
       </div>
-      <p style="text-align:center;color:var(--muted);font-size:12px" data-i18n="kanaPetVersion">KanaPet v1.25 · 4 voices · pet sounds · 10-min words · works offline</p>
+      <p style="text-align:center;color:var(--muted);font-size:12px" data-i18n="kanaPetVersion">KanaPet v1.27 · 5-column kana charts · cleaner Profile · 4 voices · works offline</p>
     </div>
   </div>
 
@@ -275,6 +318,7 @@
   <nav class="tabbar">
     <button data-tab="learn" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span data-i18n="learnTab">Learn</span></button>
     <button data-tab="review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span data-i18n="reviewTab">Review</span><span class="badge" id="review-badge" style="display:none">0</span></button>
+    <button data-tab="kana"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span data-i18n="kanaTab">Kana</span></button>
     <button data-tab="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span data-i18n="progressTab">Progress</span></button>
     <button data-tab="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span data-i18n="profileTab">Profile</span></button>
   </nav>
@@ -311,30 +355,6 @@
       <button class="btn btn-secondary lang-select" data-lang="bn" style="width:100%"><span data-i18n="banglaFull">বাংলা (Bangla)</span></button>
     </div>
     <button class="btn btn-primary" id="onboard-start" style="width:100%" disabled data-i18n="getStarted">Get Started</button>
-  </div>
-</div>
-
-<!-- Charts -->
-<div class="modal-mask" id="charts-modal">
-  <div class="modal modal-large">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px">
-      <h3 data-i18n="allKanaTitle">All Hiragana & Katakana</h3>
-      <button class="btn btn-secondary" id="charts-close" data-i18n="backToProfile">Back to Profile</button>
-    </div>
-    <div class="chart-controls">
-      <div class="chip-row" style="flex:1">
-        <button class="chip on" data-chart="all" data-i18n="all">All</button>
-        <button class="chip" data-chart="hira" data-i18n="hiragana">Hiragana</button>
-        <button class="chip" data-chart="kata" data-i18n="katakana">Katakana</button>
-        <button class="chip" data-chart="basic" data-i18n="monographs">Monographs</button>
-        <button class="chip" data-chart="dakuten" data-i18n="tenTen">Ten-ten</button>
-        <button class="chip" data-chart="handakuten" data-i18n="handakuten">Handakuten</button>
-        <button class="chip" data-chart="yoon" data-i18n="yoonSet">Yōon</button>
-      </div>
-      <input type="text" id="chart-search" placeholder="Search..." data-i18n-placeholder="search" style="padding:8px 12px;border:1px solid var(--border);border-radius:999px;font-size:14px;min-width:120px">
-      <button class="btn btn-ghost" id="chart-clear" data-i18n="clear">Clear</button>
-    </div>
-    <div id="charts-container" style="max-height:70vh;overflow-y:auto;padding:10px 0"></div>
   </div>
 </div>
 

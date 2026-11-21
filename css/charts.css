@@ -17,31 +17,43 @@
   overflow-y: auto;
 }
 
+/* Traditional gojūon: five vowel columns (a i u e o) per row. */
 .chart-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
 }
+
+.chart-grid-yoon { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.chart-grid-search { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); }
 
 .chart-cell {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 8px 4px;
+  padding: 7px 2px;
   text-align: center;
   box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  min-width: 0;
+}
+
+.chart-cell-empty {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .chart-romaji {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--muted);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   text-transform: lowercase;
+  line-height: 1.1;
 }
 
 .chart-kana {
-  font-size: 18px;
-  line-height: 1.4;
+  font-size: clamp(15px, 4.4vw, 19px);
+  line-height: 1.35;
   font-weight: 700;
 }
 
@@ -49,10 +61,36 @@
 .chart-kana.kana-sound:active { background: var(--accent-soft); transform: scale(.92); }
 
 @media (max-width: 600px) {
-  .chart-grid {
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-  }
-  .chart-kana {
-    font-size: 16px;
-  }
+.kana-head { margin-bottom: 10px; }
+.kana-head h2 { margin: 0 0 4px; font-size: 22px; }
+.kana-head p { margin: 0; font-size: 13px; color: var(--muted); }
+.kana-chart-controls { margin-bottom: 4px; }
+.kana-chart-controls .chip-row { flex: 1 0 100%; flex-wrap: nowrap; align-items: flex-start; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.kana-chart-controls .chip-row::-webkit-scrollbar { display: none; }
+.kana-chart-controls .chip-row .chip { flex: 0 0 auto; }
+.kana-chart-controls .chart-search { flex: 1; min-width: 0; }
+.kana-chart-controls .btn-ghost { min-height: 40px; padding: 8px 16px; font-size: 14px; }
+#kana-charts-container { padding: 10px 0 0; }
+.chart-search {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 14px;
+  background: var(--card);
+  color: var(--text);
+  min-width: 120px;
+}
+.chart-section h4 {
+  margin: 15px 0 8px;
+  padding: 8px 12px;
+  background: var(--accent-soft);
+  border-radius: 12px;
+  font-size: 15px;
+}
+
+.chart-grid { gap: 5px; }
+  .chart-grid-search { grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); }
+  .chart-cell { padding: 6px 1px; border-radius: 10px; }
+  .chart-romaji { font-size: 9px; }
 }

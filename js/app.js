@@ -688,7 +688,8 @@
     $('.tab-content').classList.toggle('no-scroll', name === 'learn' && !!session);
     if (name === 'review') renderReview();
     if (name === 'progress') renderProgress();
-    if (name === 'profile') renderProfile();
+    if (name === 'profile') { renderProfile(); syncProfileJump(); }
+    if (name === 'kana') renderKanaTab();
     if (name === 'learn') { if (!session) { $('#deck-area').classList.add('hidden'); $('#start-panel').classList.remove('hidden'); renderStartPanel(); } }
     if (window.Pet && previous !== name) Pet.tabChange(name, previous);
   }
@@ -813,6 +814,50 @@
   }
 
   /* ---------------- Profile / settings ---------------- */
+  var SET_KEYS = ['hiraganaBasic', 'katakanaBasic', 'hiraganaDakuten', 'katakanaDakuten', 'hiraganaHandakuten', 'katakanaHandakuten', 'yoon', 'n5', 'n4', 'n5read'];
+  var PROFILE_JUMP_IDS = ['group-profile', 'group-sets', 'group-goals', 'group-audio', 'reminders-group'];
+  var profileJumpActive = '';
+
+  function renderHeroName(name) {
+    var display = (name || '').trim() || 'Learner';
+    var avatar = $('#profile-avatar'), heroName = $('#profile-hero-name');
+    if (avatar) avatar.textContent = display.charAt(0).toUpperCase();
+    if (heroName) heroName.textContent = display;
+  }
+  function updateProfileHero() {
+    renderHeroName(state.settings.userName);
+    var lvl = $('#profile-hero-level'), xp = $('#profile-hero-xp');
+    if (lvl) lvl.textContent = state.stats.level;
+    if (xp) xp.textContent = state.stats.xp + ' XP';
+  }
+  function updateSetsCount() {
+    var on = SET_KEYS.filter(function (k) { return !!state.settings.sets[k]; }).length;
+    var el = $('#sets-count');
+    if (el) el.textContent = on + '/' + SET_KEYS.length;
+  }
+  function markProfileJump(id) {
+    if (!id || id === profileJumpActive) return;
+    profileJumpActive = id;
+    $$('.profile-jump [data-jump]').forEach(function (btn) {
+      var on = btn.dataset.jump === id;
+      btn.classList.toggle('on', on);
+      if (on) btn.setAttribute('aria-current', 'true');
+      else btn.removeAttribute('aria-current');
+    });
+  }
+  function syncProfileJump() {
+    if (currentTab !== 'profile') return;
+    var bar = $('.profile-jump'), pane = $('.tab-content');
+    if (!bar || !pane) return;
+    var pivot = bar.getBoundingClientRect().bottom + 8;
+    var active = PROFILE_JUMP_IDS[0];
+    PROFILE_JUMP_IDS.forEach(function (id) {
+      var sec = document.getElementById(id);
+      if (sec && sec.getBoundingClientRect().top <= pivot) active = id;
+    });
+    if (pane.scrollTop + pane.clientHeight >= pane.scrollHeight - 4) active = PROFILE_JUMP_IDS[PROFILE_JUMP_IDS.length - 1];
+    markProfileJump(active);
+  }
   function renderVoiceGrid() {
     var active = currentVoice();
     $$('[data-voice]').forEach(function (card) {
@@ -837,16 +882,60 @@
     $('#set-petsounds').checked = state.settings.petSounds;
     $('#set-haptic').checked = state.settings.hapticOn;
     renderVoiceGrid();
-    ['hiraganaBasic', 'katakanaBasic', 'hiraganaDakuten', 'katakanaDakuten', 'hiraganaHandakuten', 'katakanaHandakuten', 'yoon', 'n5', 'n4', 'n5read'].forEach(function (k) {
+    updateProfileHero();
+    updateSetsCount();
+    SET_KEYS.forEach(function (k) {
       var c = $('[data-set="' + k + '"]');
-      if (c) c.classList.toggle('on', !!state.settings.sets[k]);
+      if (c) {
+        c.classList.toggle('on', !!state.settings.sets[k]);
+        c.setAttribute('aria-pressed', state.settings.sets[k] ? 'true' : 'false');
+      }
     });
   }
+  /* ---------------- Kana tab (all letters) ---------------- */
+  var kanaChart = 'all';
+  function renderKanaTab() {
+    if (!window.Charts) return;
+    var search = $('#kana-chart-search');
+    window.Charts.render({
+      chart: kanaChart,
+      search: (search && search.value) || '',
+      container: 'kana-charts-container'
+    });
+  }
+  function bindKanaTab() {
+    var chips = $$('[data-kana-chart]');
+    var search = $('#kana-chart-search');
+    var clear = $('#kana-chart-clear');
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        chips.forEach(function (c) { c.classList.remove('on'); });
+        chip.classList.add('on');
+        kanaChart = chip.getAttribute('data-kana-chart');
+        renderKanaTab();
+      });
+    });
+    if (search) {
+      search.addEventListener('input', renderKanaTab);
+    }
+    if (clear) {
+      clear.addEventListener('click', function () {
+        if (search) search.value = '';
+        renderKanaTab();
+      });
+    }
+  }
+
   function bindSettings() {
     $('#set-language').addEventListener('change', function (e) {
       if (window.I18n) window.I18n.setLang(e.target.value);
     });
-    $('#set-username').addEventListener('change', function (e) { state.settings.userName = e.target.value || 'Learner'; save(); });
+    $('#set-username').addEventListener('input', function (e) { renderHeroName(e.target.value); });
+    $('#set-username').addEventListener('change', function (e) {
+      state.settings.userName = e.target.value.trim() || 'Learner';
+      save();
+      updateProfileHero();
+    });
     $('#set-petname').addEventListener('change', function (e) {
       state.settings.petName = e.target.value || 'Mochi'; save();
       $('.pet-name-tag').textContent = state.settings.petName;
@@ -882,49 +971,36 @@
         var k = chip.dataset.set;
         state.settings.sets[k] = !state.settings.sets[k];
         chip.classList.toggle('on', state.settings.sets[k]);
+        chip.setAttribute('aria-pressed', state.settings.sets[k] ? 'true' : 'false');
+        updateSetsCount();
         save();
       });
     });
     $('#mix-all').addEventListener('click', function () {
-      ['hiraganaBasic', 'katakanaBasic', 'hiraganaDakuten', 'katakanaDakuten', 'hiraganaHandakuten', 'katakanaHandakuten', 'yoon', 'n5', 'n4', 'n5read'].forEach(function (k) {
+      SET_KEYS.forEach(function (k) {
         state.settings.sets[k] = true;
-        $('[data-set="' + k + '"]').classList.add('on');
+        var c = $('[data-set="' + k + '"]');
+        if (c) { c.classList.add('on'); c.setAttribute('aria-pressed', 'true'); }
       });
+      updateSetsCount();
       save(); toast(tr('allSetsEnabled'));
     });
-    $('#view-charts').addEventListener('click', function () {
-      var chartsModal = document.getElementById('charts-modal');
-      if (chartsModal) {
-        chartsModal.classList.add('show');
-        if (window.Charts) window.Charts.render({ chart: 'all', search: '' });
-      }
-    });
-    document.getElementById('charts-close').addEventListener('click', function () {
-      var chartsModal = document.getElementById('charts-modal');
-      if (chartsModal) chartsModal.classList.remove('show');
-    });
-    var chartChips = document.querySelectorAll('[data-chart]');
-    var chartSearch = document.getElementById('chart-search');
-    var chartClear = document.getElementById('chart-clear');
-    var currentChart = 'all';
-    chartChips.forEach(function(chip) {
-      chip.addEventListener('click', function() {
-        chartChips.forEach(function(c){ c.classList.remove('on'); });
-        chip.classList.add('on');
-        currentChart = chip.getAttribute('data-chart');
-        if (window.Charts) window.Charts.render({ chart: currentChart, search: (chartSearch && chartSearch.value) || '' });
+    $('#view-charts').addEventListener('click', function () { switchTab('kana'); });
+    $$('.profile-jump [data-jump]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var target = document.getElementById(btn.dataset.jump);
+        if (!target) return;
+        markProfileJump(btn.dataset.jump);
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
-    if (chartSearch) {
-      chartSearch.addEventListener('input', function() {
-        if (window.Charts) window.Charts.render({ chart: currentChart, search: chartSearch.value });
-      });
-    }
-    if (chartClear) {
-      chartClear.addEventListener('click', function() {
-        if (chartSearch) chartSearch.value = '';
-        if (window.Charts) window.Charts.render({ chart: currentChart, search: '' });
-      });
+    var profileScroll = $('.tab-content');
+    if (profileScroll) {
+      var jumpRaf = null;
+      profileScroll.addEventListener('scroll', function () {
+        if (currentTab !== 'profile' || jumpRaf) return;
+        jumpRaf = requestAnimationFrame(function () { jumpRaf = null; syncProfileJump(); });
+      }, { passive: true });
     }
     $('#reset-btn').addEventListener('click', function () { $('#reset-modal').classList.add('show'); });
     $('#reset-cancel').addEventListener('click', function () { $('#reset-modal').classList.remove('show'); });
@@ -942,6 +1018,7 @@
     $('#xp-num').textContent = state.stats.xp;
     $('#lvl-num').textContent = state.stats.level;
     $('.pet-name-tag').textContent = state.settings.petName;
+    updateProfileHero();
     if (window.Pet) Pet.setLevel(state.stats.level);
   }
 
@@ -1000,6 +1077,7 @@
     initLetterSound();
     addWebDownloadLink();
     bindSettings();
+    bindKanaTab();
     updateXPBar();
     updateBadge();
     renderStartPanel();
@@ -1011,6 +1089,7 @@
       renderProfile();
       renderProgress();
       renderReview();
+      if (currentTab === 'kana') renderKanaTab();
       if (session && session.phase === 'idle') renderDeck();
     });
 
