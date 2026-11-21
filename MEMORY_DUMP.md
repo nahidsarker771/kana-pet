@@ -1,12 +1,12 @@
 # KanaPet — Web Deploy Memory / Resume Playbook
-> Updated 2026-10-28 for v1.25. Main resume file:
+> Updated 2026-11-21 for v1.27 (landing page + app.html). Main resume file:
 > `~/Downloads/kana/project details/SESSION_MEMORY.md`.
 
 ## 1. State
-- **Live URL:** https://nahidsarker771.github.io/kana-pet/
-- **Live version:** v1.25 pushed 2026-10-28 (verify after Pages rebuild).
-- **Code commit:** `83535e5` `v1.25: minimal Learn tab, fixed romaji eye, Review meanings`.
-- **Latest APK release:** v1.25, asset `KanaPet.apk` (49,940,783 bytes).
+- **Live URL:** https://nahidsarker771.github.io/kana-pet/ (landing) · /app.html (app)
+- **Live version:** v1.27 pushed 2026-11-21 (verify after Pages rebuild).
+- **Code commit:** `9ce106d` `web: sync v1.27 app and add SEO files`.
+- **Latest APK release:** v1.27, asset `KanaPet.apk` (49,945,167 bytes).
 - **Local APK:** `project files/apk/KanaPet-v1.25.apk`.
 - **Source `VERSION`:** 1.26 (next build).
 - Previous code: `952cab3` (v1.23). v1.24 was APK-only, not pushed.
@@ -20,8 +20,9 @@
 ## 3. File mapping (source → deploy)
 | Deploy file | Source |
 |---|---|
-| `index.html` | `project files/kanapet/www/web-version.html` |
+| `app.html` | `project files/kanapet/www/web-version.html` |
 | `app-shell.html` | `project files/kanapet/www/index.html` |
+| `index.html` | hand-authored landing (do not copy over) |
 | `css/` | `www/css/` |
 | `js/` | `www/js/` |
 | `fonts/ icons/` | `www/fonts/`, `www/icons/` |
@@ -31,7 +32,7 @@
 ## 4. Sync command
 ```bash
 cd ~/Downloads/kana
-cp "project files/kanapet/www/web-version.html" web-deploy/index.html
+cp "project files/kanapet/www/web-version.html" web-deploy/app.html
 cp "project files/kanapet/www/index.html"        web-deploy/app-shell.html
 cp "project files/kanapet/www/manifest.webmanifest" "project files/kanapet/www/sw.js" web-deploy/
 rsync -a --delete "project files/kanapet/www/js/"    web-deploy/js/

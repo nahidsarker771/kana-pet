@@ -1,68 +1,54 @@
 KanaPet — Web Deploy Info
 =========================
-Recorded: 2026-10-28 (v1.25 pushed; docs follow-up commit)
+Updated: 2026-11-21 (v1.27 live: landing page + app.html + SEO)
 
 WHAT IS LIVE / DEPLOYED
 -----------------------
 This folder (~/Downloads/kana/web-deploy) is the deployed GitHub Pages repo.
 
-  Live URL    : https://nahidsarker771.github.io/kana-pet/
-  Live version: KanaPet v1.25 (verify after GitHub Pages rebuild)
-  Code commit : 83535e5  "v1.25: minimal Learn tab, fixed romaji eye, Review meanings"
-  APK release : v1.25  (asset KanaPet.apk, 49,940,783 bytes)
-  Local APK   : project files/apk/KanaPet-v1.25.apk
-  Next build  : v1.26 (source VERSION)
-  Download URL: https://github.com/nahidsarker771/kana-pet/releases/latest/download/KanaPet.apk
+  Live landing : https://nahidsarker771.github.io/kana-pet/
+  Live web app : https://nahidsarker771.github.io/kana-pet/app.html
+  Live version : KanaPet v1.27 (web app + APK match)
+  Code commits : 356e374  new landing page, app moved to app.html
+                 9ce106d  v1.27 app sync + robots/sitemap/structured data
+  APK release  : v1.27 (asset KanaPet.apk, 49,945,167 bytes)
+  Local APK    : project files/apk/KanaPet-v1.27.apk
+  Download URL : https://github.com/nahidsarker771/kana-pet/releases/latest/download/KanaPet.apk
+  Source       : https://github.com/nahidsarker771/kana-pet
 
-GIT DETAILS
------------
-  Remote (origin): https://github.com/nahidsarker771/kana-pet.git
-  Branch         : main
-  Deploy method  : GitHub Pages (.nojekyll present)
-  Previous code  : 952cab3  v1.23
-  Current code   : 83535e5  v1.25 (docs follow-up commit after this one)
+HOSTING
+-------
+  GitHub Pages (free, HTTPS, always on) from the repo root, branch main.
+  `.nojekyll` present. No server, database or paid service is required.
+  Google indexing: robots.txt + sitemap.xml are live. Submitting the sitemap
+  in Google Search Console needs the owner's Google account (manual step).
 
 FILES
 -----
-  index.html        <- web landing/version wrapper (== www/web-version.html)
+  index.html        <- hand-authored landing page (do NOT sync over this)
+  app.html          <- web app (== www/web-version.html)
   app-shell.html    <- app shell (== www/index.html)
   css/ js/          <- identical to source www/
   fonts/ icons/     <- local fonts/icons for offline PWA
-  audio/            <- Momo root clips + nanami/ yuki/ keita/ (4 × 1003)
-  manifest.webmanifest + sw.js
-  .nojekyll         <- disables Jekyll processing (GitHub Pages)
+  audio/            <- Momo root + nanami/ yuki/ keita/ (4 x 1003)
+  manifest.webmanifest + sw.js   start_url/CORE = app.html, cache v1.27
+  robots.txt, sitemap.xml        search indexing
+  .nojekyll                      disables Jekyll processing
 
 RELATION TO SOURCE
 ------------------
-  web-deploy is a copy of:
-     ~/Downloads/kana/project files/kanapet/www/
-  Two HTML wrappers are renamed:
-     index.html     == www/web-version.html
+  web-deploy is a copy of ~/Downloads/kana/project files/kanapet/www/
+     app.html       == www/web-version.html
      app-shell.html == www/index.html
-  Source VERSION : 1.26 (next build)
-  Current APK    : v1.25
-  Current web    : v1.25 (pushed)
-
-V1.25 CHANGES
--------------
-  - Review Missed + History now store and show each card's meaning (English
-    and Bangla). Legacy records are backfilled by kana + romaji + group.
-  - Eye ON also reveals the example word + meaning on the card front:
-    kana cards show "さかな (sakana) · fish", reading/vocab cards show "water".
-  - Answers now save `key` + `meaning` in errors/history records.
-
-V1.24 CHANGES (included in this web update)
--------------------------------------------
-  - Minimal Learn tab: only Missed / Got it remain; Skip + "I don't know" row
-    and the "Tap a letter..." instruction text removed.
-  - Eye moved into the session progress row; no scrolling during a session
-    (fits 360×600–800); eye patches cards in place so a flipped answer stays.
+  Source VERSION : 1.28 (next build)
+  Current APK    : v1.27
+  Current web    : v1.27
 
 TO DEPLOY NEXT TIME
 -------------------
 ```bash
 cd ~/Downloads/kana
-cp "project files/kanapet/www/web-version.html" web-deploy/index.html
+cp "project files/kanapet/www/web-version.html" web-deploy/app.html
 cp "project files/kanapet/www/index.html"        web-deploy/app-shell.html
 cp "project files/kanapet/www/manifest.webmanifest" "project files/kanapet/www/sw.js" web-deploy/
 rsync -a --delete "project files/kanapet/www/js/"    web-deploy/js/
@@ -70,10 +56,13 @@ rsync -a --delete "project files/kanapet/www/css/"   web-deploy/css/
 rsync -a --delete "project files/kanapet/www/fonts/" web-deploy/fonts/
 rsync -a --delete "project files/kanapet/www/icons/" web-deploy/icons/
 rsync -a --delete "project files/kanapet/www/audio/" web-deploy/audio/
-cd web-deploy
-git add -A
-git commit -m "v<ver>: ..."
-git push origin main
+# re-apply deploy-only edits: sw.js CORE/fallback = app.html,
+# manifest start_url = ./app.html, and KEEP index.html (landing) untouched.
+cd web-deploy && git add -A && git commit -m "v<ver>: ..." && git push origin main
 ```
 Then create a GitHub release and upload the APK as asset `KanaPet.apk` so the
-web Download button resolves to the new version.
+web Download button resolves to the new version:
+```bash
+gh release create v<ver> /path/KanaPet.apk -R nahidsarker771/kana-pet \
+  --title "KanaPet v<ver>" --notes "..."
+```
