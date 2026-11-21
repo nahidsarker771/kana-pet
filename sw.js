@@ -1,8 +1,8 @@
 /* KanaPet service worker — offline web app + notification display. */
 'use strict';
-var CACHE = 'kanapet-v1.25';
+var CACHE = 'kanapet-v1.27';
 var CORE = [
-  './', 'index.html', 'manifest.webmanifest',
+  './app.html', 'manifest.webmanifest',
   'css/fonts.css', 'css/style.css', 'css/charts.css',
   'js/n5words.js', 'js/data.js', 'js/i18n.js', 'js/translations_words.js',
   'js/translations_bn.js', 'js/charts.js', 'js/pet.js', 'js/app.js',
@@ -46,13 +46,13 @@ self.addEventListener('fetch', function (e) {
     if (res && res.ok) { var copy = res.clone(); caches.open(CACHE).then(function (c) { c.put(req, copy); }); }
     return res;
   }).catch(function () {
-    return caches.match(req).then(function (hit) { return hit || caches.match('index.html'); });
+    return caches.match(req).then(function (hit) { return hit || caches.match('app.html'); });
   }));
 });
 
 self.addEventListener('notificationclick', function (e) {
   e.notification.close();
-  var target = (e.notification.data && e.notification.data.url) || './';
+  var target = (e.notification.data && e.notification.data.url) || './app.html';
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (list) {
     for (var i = 0; i < list.length; i++) {
       if ('focus' in list[i]) return list[i].focus();
